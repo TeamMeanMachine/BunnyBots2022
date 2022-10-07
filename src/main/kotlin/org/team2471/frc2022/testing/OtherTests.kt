@@ -45,7 +45,7 @@ suspend fun Drive.currentTest() = use(this) {
     }
 }
 
-suspend fun canTest() {
+suspend fun Drive.canTest() {
 //    val steerMotor = MotorController(FalconID(41,"TestCanivore"))
 //    val driveMotor = MotorController(FalconID(42,"TestCanivore"))
 

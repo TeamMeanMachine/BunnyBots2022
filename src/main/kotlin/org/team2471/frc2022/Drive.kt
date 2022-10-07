@@ -44,11 +44,6 @@ object Drive : Subsystem("Drive"), SwerveDrive {
     val odometer1Entry = table.getEntry("Odometer 1")
     val odometer2Entry = table.getEntry("Odometer 2")
     val odometer3Entry = table.getEntry("Odometer 3")
-    val offset0Entry = table.getEntry("Offset 0")
-    val offset1Entry = table.getEntry("Offset 1")
-    val offset2Entry = table.getEntry("Offset 2")
-    val offset3Entry = table.getEntry("Offset 3")
-
 
     val radialVelocityEntry = table.getEntry("Radial Velocity")
     val angularVelocityEntry = table.getEntry("Angular Velocity")
@@ -77,38 +72,39 @@ object Drive : Subsystem("Drive"), SwerveDrive {
             MotorController(FalconID(Falcons.DRIVE_FRONTLEFT, "TestCanivore")),
             MotorController(FalconID(Falcons.STEER_FRONTLEFT, "TestCanivore")),
             Vector2(-11.5, 14.0),
-            offset0Entry.getDouble(0.0).degrees,
+            Preferences.getDouble("Angle Offset 0",0.0).degrees,
             CANCoders.CANCODER_FRONTLEFT,
             odometer0Entry,
-            offset0Entry
+            "Angle Offset 0"
         ),
-/*
 
         Module(
             MotorController(FalconID(Falcons.DRIVE_FRONTRIGHT)),
             MotorController(FalconID(Falcons.STEER_FRONTRIGHT)),
             Vector2(11.5, 14.0),
-            offset1Entry.getDouble(0.0).degrees,
+            Preferences.getDouble("Angle Offset 1",0.0).degrees,
             AnalogSensors.SWERVE_FRONT_RIGHT,
-            odometer1Entry
+            odometer1Entry,
+            "Angle Offset 1"
         ),
         Module(
-            MotorController(FalconID(Falcons.DRIVE_BACKRIGHT)),
-            MotorController(FalconID(Falcons.STEER_BACKRIGHT)),
+            MotorController(FalconID(Falcons.DRIVE_REARRIGHT)),
+            MotorController(FalconID(Falcons.STEER_REARRIGHT)),
             Vector2(11.5, -14.0),
-            offset2Entry.getDouble(0.0).degrees,
+            Preferences.getDouble("Angle Offset 2",0.0).degrees,
             AnalogSensors.SWERVE_BACK_RIGHT,
-            odometer2Entry
+            odometer2Entry,
+            "Angle Offset 2"
         ),
         Module(
-            MotorController(FalconID(Falcons.DRIVE_BACKLEFT)),
-            MotorController(FalconID(Falcons.STEER_BACKLEFT)),
+            MotorController(FalconID(Falcons.DRIVE_REARLEFT)),
+            MotorController(FalconID(Falcons.STEER_REARLEFT)),
             Vector2(-11.5, -14.0),
-            offset3Entry.getDouble(0.0).degrees,
+            Preferences.getDouble("Angle Offset 3",0.0).degrees,
             AnalogSensors.SWERVE_BACK_LEFT,
-            odometer3Entry
+            odometer3Entry,
+            "Angle Offset 3"
         )
-*/
     )
 
     //    val gyro: Gyro? = null
@@ -459,7 +455,7 @@ object Drive : Subsystem("Drive"), SwerveDrive {
         override val angleOffset: Angle,
         canCoderID: Int,
         private val odometerEntry: NetworkTableEntry,
-        private val offsetEntry: NetworkTableEntry
+        val angleOffsetName: String
     ) : SwerveDrive.Module {
         companion object {
             private const val ANGLE_MAX = 983
@@ -477,7 +473,7 @@ object Drive : Subsystem("Drive"), SwerveDrive {
 
         val absoluteAngle: Angle
             get() {
-                return canCoder.absolutePosition.degrees
+                return (canCoder.absolutePosition.degrees - angleOffset).wrap()
 //                return ((((analogAngleInput.voltage - 0.0) / 5.0) * 360.0).degrees + angleOffset).wrap()
             }
 
@@ -524,11 +520,10 @@ object Drive : Subsystem("Drive"), SwerveDrive {
             println("Drive.module.init")
             turnMotor.config(20) {
                 // this was from lil bois bench test of swerve
-                feedbackCoefficient = 360.0 / 2048.0 / 21.65  // ~111 ticks per degree // spark max-neo 360.0 / 42.0 / 19.6 // degrees per tick
-                println("Angle Offset = $angleOffset")
+                feedbackCoefficient = 360.0 / 2048.0 / 21.451  // ~111 ticks per degree // spark max-neo 360.0 / 42.0 / 19.6 // degrees per tick
                 setRawOffsetConfig(absoluteAngle)
-                inverted(true)
-                setSensorPhase(false)
+                inverted(false)
+                setSensorPhase(true)
                 pid {
                     p(0.000002)
 //                    d(0.0000025)
@@ -587,8 +582,8 @@ object Drive : Subsystem("Drive"), SwerveDrive {
         }
 
         fun setAngleOffset() {
-            offsetEntry.setDouble(absoluteAngle.asDegrees)
-            println("Offset = ${absoluteAngle.asDegrees}")
+            Preferences.setDouble(angleOffsetName, canCoder.absolutePosition)
+            println("Offset = ${canCoder.absolutePosition}")
         }
     }
 

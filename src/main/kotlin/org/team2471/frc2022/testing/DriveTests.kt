@@ -23,12 +23,11 @@ suspend fun Drive.steeringTests() = use(this) {
         println("Got into first for. Hi.")
         for (quadrant in 0..4) {
             Drive.modules[module].angleSetpoint = (quadrant * 90.0).degrees
-            delay(0.25)
+            delay(0.5)
         }
         delay(0.5)
     }
 }
-//
 
 suspend fun Drive.driveTests() = use(this) {
 
@@ -43,6 +42,13 @@ suspend fun Drive.driveTests() = use(this) {
 suspend fun Drive.fullTest() = use(this) {
     periodic {
         Drive.drive(OI.driveTranslation, OI.driveRotation)
+    }
+}
+
+suspend fun Drive.steeringAngleTest() = use(this) {
+    periodic {
+        val mod0 = (modules[0] as Drive.Module)
+        println("Motor Angle = ${mod0.angle}  Cancoder Angle = ${mod0.absoluteAngle}")
     }
 }
 

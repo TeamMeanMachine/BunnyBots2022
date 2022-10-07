@@ -53,6 +53,7 @@ object Robot : MeanlibRobot() {
 //        ShootingTests
 
         PowerInfo
+        Drive
     }
 
     override suspend fun enable() {
@@ -89,18 +90,19 @@ object Robot : MeanlibRobot() {
 
     override suspend fun test()  {
         println("test mode begin. Hi.")
+        Drive.setAngleOffsets()
         //Drive.driveCircle()
-//        canTest()
+//        Drive.canTest()
         Drive.steeringTests()
-//        Drive.driveTests()
-//        Drive.setAngleOffsets()
+        Drive.driveTests()
+//        Drive.steeringAngleTest()
     }
 
 
 
 
     override suspend fun disable() {
-//        Drive.disable()
+        Drive.disable()
         PowerInfo.disable()
         OI.operatorController.rumble = 0.0
 //        PowerDistribution.disable()

@@ -24,8 +24,14 @@ object DigitalSensors {
 
 object Falcons {
 
-    const val STEER_FRONTLEFT = 41
-    const val DRIVE_FRONTLEFT = 42
+    const val DRIVE_FRONTLEFT = 12
+    const val STEER_FRONTLEFT = 13
+    const val DRIVE_FRONTRIGHT = 2
+    const val STEER_FRONTRIGHT = 3
+    const val DRIVE_REARRIGHT = 0
+    const val STEER_REARRIGHT = 1
+    const val DRIVE_REARLEFT= 14
+    const val STEER_REARLEFT = 15
 
    /* const val DRIVE_FRONTRIGHT = 50
     const val STEER_FRONTRIGHT = 49
