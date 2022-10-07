@@ -52,7 +52,7 @@ object Robot : MeanlibRobot() {
         AutoChooser
 //        ShootingTests
 
-        PowerInfo
+
         Drive
     }
 
@@ -66,7 +66,6 @@ object Robot : MeanlibRobot() {
 
 //        zeroIntakePivot()
         println("ending enable")
-        PowerInfo.enable()
     }
 
     override suspend fun autonomous() {
@@ -103,7 +102,6 @@ object Robot : MeanlibRobot() {
 
     override suspend fun disable() {
         Drive.disable()
-        PowerInfo.disable()
         OI.operatorController.rumble = 0.0
 //        PowerDistribution.disable()
         //FrontLimelight.disable()
