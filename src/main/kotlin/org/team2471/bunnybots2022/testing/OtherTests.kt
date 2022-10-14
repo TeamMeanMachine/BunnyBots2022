@@ -1,13 +1,12 @@
-package org.team2471.frc2022.testing
+package org.team2471.bunnybots2022.testing
 
-import com.ctre.phoenix.sensors.CANCoder
 import org.team2471.frc.lib.coroutines.delay
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.framework.use
 import org.team2471.frc.lib.input.Controller
 import org.team2471.frc.lib.math.round
-import org.team2471.frc2022.Drive
-import org.team2471.frc2022.OI
+import org.team2471.bunnybots2022.Drive
+import org.team2471.bunnybots2022.OI
 
 
 suspend fun Drive.currentTest() = use(this) {

@@ -1,4 +1,4 @@
-package org.team2471.frc2022
+package org.team2471.bunnybots2022
 
 import com.kauailabs.navx.frc.AHRS
 import edu.wpi.first.wpilibj.SPI

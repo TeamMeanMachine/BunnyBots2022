@@ -1,13 +1,16 @@
 @file:Suppress("unused")
 
-package org.team2471.frc2022
+package org.team2471.bunnybots2022
 
 object Talons {
+    const val INTAKE_PIVOT = 89
 
 }
 
 
 object Sparks {
+    const val INTAKE_SPIT = 112
+    const val INTAKE_SUCK = 60
 
 
 }
@@ -19,7 +22,8 @@ object AnalogSensors {
     const val SWERVE_BACK_LEFT = 3
 }
 object DigitalSensors {
-
+    const val INTAKE_ARM = 25
+    const val INTAKE_ELEVATOR = 99
 }
 
 object Falcons {
@@ -33,16 +37,10 @@ object Falcons {
     const val DRIVE_REARLEFT= 14
     const val STEER_REARLEFT = 15
 
-   /* const val DRIVE_FRONTRIGHT = 50
-    const val STEER_FRONTRIGHT = 49
-    const val DRIVE_FRONTLEFT = 45
-    const val STEER_FRONTLEFT = 46
-    const val DRIVE_BACKLEFT = 48
-    const val STEER_BACKLEFT = 47
-    const val DRIVE_BACKRIGHT = 51
-    const val STEER_BACKRIGHT = 52
-    const val DRIVE_SPARE1  = 53
-    const val STEER_SPARE1 = 54*/
+    const val ARM = 26
+
+    const val ELEVATOR = 100
+
 }
 
 object CANCoders {

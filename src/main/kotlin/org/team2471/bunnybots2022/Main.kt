@@ -1,21 +1,12 @@
 @file:JvmName("Main")
 
-package org.team2471.frc2022
+package org.team2471.bunnybots2022
 
 import FRC____.BuildConfig
-import edu.wpi.first.math.geometry.Pose2d
-import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.wpilibj.RobotBase
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import org.team2471.frc.lib.coroutines.MeanlibDispatcher
-import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.framework.MeanlibRobot
-import org.team2471.frc.lib.math.Vector2
-import org.team2471.frc.lib.units.*
-import org.team2471.frc2022.testing.*
+import org.team2471.bunnybots2022.testing.*
 import java.net.NetworkInterface
 
 var isCompBot = true
