@@ -4,6 +4,7 @@ package org.team2471.bunnybots2022
 
 object Talons {
     const val INTAKE_PIVOT = 89
+    const val BUNNY_LIFT = 51
 
 }
 
@@ -24,6 +25,13 @@ object AnalogSensors {
 object DigitalSensors {
     const val INTAKE_ARM = 25
     const val INTAKE_ELEVATOR = 99
+}
+
+object PWMServos {
+    const val BUNNY_PINCH = 52
+    const val DEPTH_ONE = 53
+    const val DEPTH_TWO = 54
+    const val INTAKE_PIVOT = 55
 }
 
 object Falcons {
