@@ -20,7 +20,7 @@ object Armavator : Subsystem("Armavator") {
         val elevatorMotor = MotorController(FalconID(Falcons.ELEVATOR))
 
         //sensors
-        val armAngleEncoder = DutyCycleEncoder(DigitalSensors.INTAKE_ARM)
+        val armAngleEncoder = DutyCycleEncoder(AnalogSensors.ARM_ANGLE)
         val elevatorEncoder = DutyCycleEncoder(DigitalSensors.INTAKE_ELEVATOR)
 
         //data table
@@ -30,7 +30,21 @@ object Armavator : Subsystem("Armavator") {
 
 
         init {
-
+            armMotor.config(20) {
+                // this was from lil bois bench test of swerve
+                feedbackCoefficient = 9.0 * 360.0 / 2048.0 / 2048.0  // ~111 ticks per degree // spark max-neo 360.0 / 42.0 / 19.6 // degrees per tick
+                //setRawOffsetConfig(absoluteAngle)
+                currentLimit(15,20,1)
+//                inverted(false)
+//                setSensorPhase(true)
+//                pid {
+//                    p(0.000002)
+////                    d(0.0000025)
+//                }
+////                burnSettings()
+            }
         }
-
+    override suspend fun default(){
+        println("Arm_Angle ${armAngleEncoder.absolutePosition}")
+    }
 }

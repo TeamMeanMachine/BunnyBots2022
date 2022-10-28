@@ -2,7 +2,7 @@
 
 package org.team2471.bunnybots2022
 
-import FRC____.BuildConfig
+import BunnyBots____.BuildConfig
 import edu.wpi.first.wpilibj.RobotBase
 import kotlinx.coroutines.DelicateCoroutinesApi
 import org.team2471.frc.lib.framework.MeanlibRobot
@@ -41,21 +41,18 @@ object Robot : MeanlibRobot() {
 //        Drive.zeroGyro()
 //        Drive.heading = 0.0.degrees
         AutoChooser
-//        ShootingTests
-
-
+        Armavator
+        Bunny
+        DepthCharge
         Drive
     }
 
     override suspend fun enable() {
         println("starting enable")
         Drive.enable()
-
-        //FrontLimelight.enable()
-//        Drive.initializeSteeringMotors()
-//        ShootingTests.enable()
-
-//        zeroIntakePivot()
+        Armavator.enable()
+        Bunny.enable()
+        DepthCharge.enable()
         println("ending enable")
     }
 
@@ -75,17 +72,10 @@ object Robot : MeanlibRobot() {
         println("telop begin")
         Drive.aimPDController = Drive.teleopPDController
         Drive.headingSetpoint = Drive.heading
-
     }
 
     override suspend fun test()  {
         println("test mode begin. Hi.")
-        Drive.setAngleOffsets()
-        //Drive.driveCircle()
-//        Drive.canTest()
-        Drive.steeringTests()
-        Drive.driveTests()
-//        Drive.steeringAngleTest()
     }
 
 
@@ -93,6 +83,9 @@ object Robot : MeanlibRobot() {
 
     override suspend fun disable() {
         Drive.disable()
+        Armavator.disable()
+        Bunny.disable()
+        DepthCharge.disable()
         OI.operatorController.rumble = 0.0
 //        PowerDistribution.disable()
         //FrontLimelight.disable()

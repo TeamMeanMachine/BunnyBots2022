@@ -21,6 +21,7 @@ object AnalogSensors {
     const val SWERVE_FRONT_RIGHT = 1
     const val SWERVE_BACK_RIGHT = 2
     const val SWERVE_BACK_LEFT = 3
+    const val ARM_ANGLE = 3
 }
 object DigitalSensors {
     const val INTAKE_ARM = 25
