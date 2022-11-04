@@ -17,11 +17,11 @@ object Sparks {
 }
 
 object AnalogSensors {
-    const val SWERVE_FRONT_LEFT = 0
+    const val SWERVE_FRONT_LEFT = 4
     const val SWERVE_FRONT_RIGHT = 1
     const val SWERVE_BACK_RIGHT = 2
     const val SWERVE_BACK_LEFT = 3
-    const val ARM_ANGLE = 3
+    const val ARM_ANGLE = 0
 }
 object DigitalSensors {
     const val INTAKE_ARM = 25
@@ -29,10 +29,10 @@ object DigitalSensors {
 }
 
 object PWMServos {
-    const val BUNNY_PINCH = 52
-    const val DEPTH_ONE = 53
-    const val DEPTH_TWO = 54
-    const val INTAKE_PIVOT = 55
+    const val BUNNY_PINCH = 2
+    const val DEPTH_ONE = 3
+    const val DEPTH_TWO = 4
+    const val INTAKE_PIVOT = 5
 }
 
 object Falcons {
