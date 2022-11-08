@@ -55,6 +55,9 @@ object OI {
 
         driverController::x.whenTrue { Drive.position = Vector2(0.0, -12.0) }
 
+        driverController::y.whenTrue { goToPose(Pose.N_Pos)}
+
+        driverController::b.whenTrue { goToPose(Pose.START_POS)}
 
     }
 }

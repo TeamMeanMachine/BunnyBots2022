@@ -4,6 +4,9 @@ import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.AnalogInput
 import edu.wpi.first.wpilibj.DutyCycleEncoder
 import edu.wpi.first.wpilibj.Servo
+import edu.wpi.first.wpilibj.Timer
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 import org.team2471.frc.lib.actuators.FalconID
 import org.team2471.frc.lib.actuators.MotorController
@@ -12,9 +15,11 @@ import org.team2471.frc.lib.actuators.TalonID
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.framework.Subsystem
 import org.team2471.frc.lib.input.Controller
+import org.team2471.frc.lib.motion_profiling.MotionCurve
 import org.team2471.frc.lib.units.Angle
 import org.team2471.frc.lib.units.Length
 import org.team2471.frc.lib.units.degrees
+import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
 
@@ -32,8 +37,9 @@ object Armavator : Subsystem("Armavator") {
 
     //data table
     private val table = NetworkTableInstance.getDefault().getTable(Armavator.name)
-    val currentEntry = table.getEntry("Current")
+    val armCurrentEntry = table.getEntry("Current")
     val armAngleEntry = table.getEntry("Arm Angle")
+    val armSetPointEntry = table.getEntry("Arm Set Point")
     val angleOffset = 230.0.degrees
 
     const val ARM_ANGLE_MIN = 7.0
@@ -64,27 +70,82 @@ object Armavator : Subsystem("Armavator") {
 
     val analogAngle: Angle
         get() = -(((armAngleEncoder.voltage - 0.2) / 4.6 * 360.0).degrees) + angleOffset
+
     init {
         armMotor.config(20) {
             // this was from lil bois bench test of swerve
-            feedbackCoefficient = (18.0/66.0) * (18.0/72.0) * (1.0/4.0) * (1.0/4.0) * (360.0/2048.0) // degrees per tick
+            feedbackCoefficient =
+                (18.0 / 66.0) * (18.0 / 72.0) * (1.0 / 4.0) * (1.0 / 4.0) * (360.0 / 2048.0) // degrees per tick
             setRawOffsetConfig(analogAngle)
-            currentLimit(15,20,1)
+            currentLimit(15, 20, 1)
             pid {
                 p(0.0000001)
-                    d(0.00002)
+                d(0.00002)
             }
 ////                burnSettings()
         }
-
-
+        GlobalScope.launch {
+            periodic {
+                armAngleEntry.setDouble(armAngle.asDegrees)
+                armSetPointEntry.setDouble(armSetPoint.asDegrees)
+                armCurrentEntry.setDouble(armMotor.current)
+            }
+        }
+    }
+    fun angleChangeTime(target: Double) : Double {
+        val distance = (armAngle.asDegrees - target).absoluteValue
+        val rate = 45.4242 / 1.0 // degrees per sec
+        return distance / rate
+    }
+    fun heightChangeTime(target: Double) : Double {
+//        val distance = (height - target)
+//        val rate = if (distance < 0.0) 40.0 else 20.0  // inches per sec
+//        return distance.absoluteValue / rate
+        return 1.0
+    }
+    suspend fun changeAngle(target: Double, minTime: Double = 0.0) {
+        var time = angleChangeTime(target)
+        if (minTime > time) {
+            println("Time extended for changeAngle using minTime: $minTime")
+            time = minTime
+        }
+        changePosition(armAngle.asDegrees, target, time, { value: Double ->
+            armSetPoint = value.degrees
+//            updatePositions()
+        })
     }
 
+    suspend fun changeHeight(target: Double, minTime: Double = 0.0) {
+        var time = heightChangeTime(target)
+        if (minTime > time) {
+            println("Time extended for changeHeight using minTime: $minTime")
+            time = minTime
+        }
+//        changePosition(height, target, time, { value: Double ->
+//            heightSetpoint = value
+//            updatePositions()
+//        })
+    }
+    suspend fun changePosition(current: Double, target: Double, time : Double, function: (value : Double) -> (Unit)) {
+        val curve = MotionCurve()
+        curve.storeValue(0.0, current)
+        curve.storeValue(time, target)
+        val timer = Timer()
+        timer.start()
+        periodic {
+            val t = timer.get()
+            // println("ARM TIME: $t ${armAngle.asDegrees}   ${curve.getValue(t)}") //For printing arm stuff
+            function(curve.getValue(t))
+            if (t >= curve.length) {
+                stop()
+            }
+        }
+    }
 
     override suspend fun default(){
         println("starting periodic")
         periodic {
-            println("Motor Angle: ${armMotor.position.roundToInt() - analogAngle.asDegrees.roundToInt()}  Set Point: ${armSetPoint} Power: ${(armMotor.output * 100).roundToInt()}")
+            //println("Motor Angle: ${armMotor.position.roundToInt() - analogAngle.asDegrees.roundToInt()}  Set Point: ${armSetPoint} Power: ${(armMotor.output * 100).roundToInt()}")
 
             if (OI.driverController.dPad == Controller.Direction.UP) {
                 upPressed = true

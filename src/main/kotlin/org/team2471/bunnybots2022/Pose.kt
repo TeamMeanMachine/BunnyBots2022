@@ -6,6 +6,7 @@ data class Pose(val elevatorHeight: Double, val armAngle: Double) {
         val current: Pose
             get() = Pose(Armavator.elevatorHeight, Armavator.armAngle.asDegrees)
 
+        val N_Pos = Pose(Armavator.ELEVATOR_START, Armavator.ARM_ANGLE_MAX)
         val START_POS = Pose(Armavator.ELEVATOR_START, Armavator.ARM_ANGLE_MIN)
 
     }
