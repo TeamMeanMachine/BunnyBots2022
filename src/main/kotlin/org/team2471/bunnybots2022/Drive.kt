@@ -531,28 +531,28 @@ object Drive : Subsystem("Drive"), SwerveDrive {
 //                burnSettings()
             }
 
-            val moduleContLimit: Int = when ((driveMotor.motorID as FalconID).value) {
-                Falcons.DRIVE_FRONTLEFT -> 60     //added 5 to all
+//            val moduleContLimit: Int = when ((driveMotor.motorID as FalconID).value) {
+//                Falcons.DRIVE_FRONTLEFT -> 60     //added 5 to all
 /*
                 Falcons.DRIVE_FRONTRIGHT -> 60   //
                 Falcons.DRIVE_BACKRIGHT -> 70     //
                 Falcons.DRIVE_BACKLEFT -> 70
 */
-                else -> 55
-            }
+//                else -> 55
+//            }
 
             val modulePeakLimit: Int = when ((driveMotor.motorID as FalconID).value) {
                 Falcons.DRIVE_FRONTLEFT -> 65    //added 5 to all
-//                Falcons.DRIVE_FRONTRIGHT -> 65    //
-//                Falcons.DRIVE_BACKRIGHT -> 75        //
-//                Falcons.DRIVE_BACKLEFT -> 75
+////                Falcons.DRIVE_FRONTRIGHT -> 65    //
+////                Falcons.DRIVE_BACKRIGHT -> 75        //
+////                Falcons.DRIVE_BACKLEFT -> 75
                 else -> 60
             }
 
             driveMotor.config {
                 brakeMode()
                 feedbackCoefficient = 1.0 / 2048.0 / 5.857 / 1.09 * 6.25 / 8.0 // spark max-neo 1.0 / 42.0/ 5.857 / fudge factor * 8ft test 2022
-                currentLimit(moduleContLimit, modulePeakLimit, 1)
+                currentLimit(70, 75, 1)
                 openLoopRamp(0.2) //1.0
 //                burnSettings()
             }
