@@ -29,11 +29,11 @@ suspend fun Drive.steeringTests() = use(this) {
 }
 
 suspend fun Drive.driveTests() = use(this) {
-
-    for (i in 0..3) {
-            Drive.modules[i].setDrivePower(0.5)
+    println("Got into driveTests. Hi")
+    for (module in modules.indices) {
+            Drive.modules[module].setDrivePower(0.5)
             delay(1.0)
-            Drive.modules[i].setDrivePower(0.0)
+            Drive.modules[module].setDrivePower(0.0)
             delay(0.2)
     }
 }

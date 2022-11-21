@@ -25,8 +25,8 @@ import kotlin.math.roundToInt
 
 object Armavator : Subsystem("Armavator") {
     //motors
-    val suckMotor = MotorController(SparkMaxID(Sparks.INTAKE_SUCK))
-    val spitMotor = MotorController(SparkMaxID(Sparks.INTAKE_SPIT))
+    val suckMotor = MotorController(TalonID(Talons.INTAKE_SUCK))
+    val spitMotor = MotorController(TalonID(Talons.INTAKE_SPIT))
     val intakePivotMotor = Servo(PWMServos.INTAKE_PIVOT)
     val armMotor = MotorController(FalconID(Falcons.ARM))
     val elevatorMotor = MotorController(FalconID(Falcons.ELEVATOR))
@@ -40,10 +40,10 @@ object Armavator : Subsystem("Armavator") {
     val armCurrentEntry = table.getEntry("Current")
     val armAngleEntry = table.getEntry("Arm Angle")
     val armSetPointEntry = table.getEntry("Arm Set Point")
-    val angleOffset = 230.0.degrees
+    val angleOffset = 96.0.degrees
 
     const val ARM_ANGLE_MIN = 7.0
-    const val ARM_ANGLE_MAX = 95.0
+    const val ARM_ANGLE_MAX = 91.0
     const val ELEVATOR_MIN = 0.0
     const val ELEVATOR_MAX = 0.0
     const val ELEVATOR_START = 0.0
