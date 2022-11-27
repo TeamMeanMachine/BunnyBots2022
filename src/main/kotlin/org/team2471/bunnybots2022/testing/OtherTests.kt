@@ -10,6 +10,7 @@ import org.team2471.frc.lib.math.round
 import org.team2471.frc.lib.actuators.FalconID
 import org.team2471.frc.lib.actuators.MotorController
 import org.team2471.frc.lib.actuators.SparkMaxID
+import org.team2471.frc.lib.actuators.TalonID
 import org.team2471.frc.lib.units.degrees
 
 
@@ -79,7 +80,7 @@ suspend fun canTest() {
 }
 
  suspend fun theifMotorTest() {
-     val motor = MotorController(SparkMaxID(Sparks.INTAKE_SUCK))
+     val motor = MotorController(TalonID(Talons.INTAKE_SUCK))
      motor.setPercentOutput(0.5)
  }
 

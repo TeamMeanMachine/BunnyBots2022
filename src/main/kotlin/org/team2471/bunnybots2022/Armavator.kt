@@ -48,12 +48,12 @@ object Armavator : Subsystem("Armavator") {
     const val ELEVATOR_MAX = 0.0
     const val ELEVATOR_START = 0.0
 
-
-
-
-
     var upPressed = false
     var downPressed = false
+    var leftPressed = false
+    var rightPressed = false
+
+    var elevatorPower = 0.0
 
     var armSetPoint = analogAngle
         set(value) {
@@ -147,27 +147,58 @@ object Armavator : Subsystem("Armavator") {
         periodic {
             //println("Motor Angle: ${armMotor.position.roundToInt() - analogAngle.asDegrees.roundToInt()}  Set Point: ${armSetPoint} Power: ${(armMotor.output * 100).roundToInt()}")
 
+            if (OI.driverController.dPad == Controller.Direction.LEFT) {
+                leftPressed = true
+            } else if (OI.driverController.dPad == Controller.Direction.RIGHT) {
+                rightPressed = true
+            }
+            if(OI.driverController.dPad != Controller.Direction.LEFT && leftPressed) {
+                leftPressed = false
+                armSetPoint += 45.0.degrees
+                println("dpad left")
+            }
+            if(OI.driverController.dPad != Controller.Direction.RIGHT && rightPressed) {
+                rightPressed = false
+                armSetPoint -= 45.0.degrees
+                println("dpad right")
+            }
+
+
             if (OI.driverController.dPad == Controller.Direction.UP) {
                 upPressed = true
             } else if (OI.driverController.dPad == Controller.Direction.DOWN) {
                 downPressed = true
             }
-
             if(OI.driverController.dPad != Controller.Direction.UP && upPressed) {
                 upPressed = false
-                armSetPoint += 45.0.degrees
+                elevatorPower += .01
                 println("dpad up")
             }
-
             if(OI.driverController.dPad != Controller.Direction.DOWN && downPressed) {
                 downPressed = false
-                armSetPoint -= 45.0.degrees
+                elevatorPower -= .01
                 println("dpad down")
             }
 
-  //          println("current: ${armMotor.current}")
+//            println("current: ${elevatorMotor.current} power=$elevatorPower")
+            elevatorMotor.setPercentOutput(elevatorPower)
+
+            suckMotor.setPercentOutput(if (OI.driverController.x) 1.0 else 0.0)
+
+            spitMotor.setPercentOutput(if (OI.driverController.a) 0.8 else 0.0)
+
+
         }
         println("ending periodic")
     }
 
+    fun intakeTube() {
+        suckMotor.setPercentOutput(0.5)
+        println("intake tube")
+    }
+
+    fun spitTube(power: Double) {
+        spitMotor.setPercentOutput(power)
+        println("spit tube")
+    }
 }
