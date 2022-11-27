@@ -53,9 +53,9 @@ object OI {
     init {
         driverController::back.whenTrue { Drive.zeroGyro(); Drive.initializeSteeringMotors() }
 
-        driverController::y.whenTrue { goToPose(Pose.N_Pos)}
+        // driverController::y.whenTrue { goToPose(Pose.N_Pos)}
 
-        driverController::b.whenTrue { goToPose(Pose.START_POS)}
+        // driverController::b.whenTrue { goToPose(Pose.START_POS)}
 
     }
 }

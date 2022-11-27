@@ -19,6 +19,7 @@ import org.team2471.frc.lib.motion_profiling.MotionCurve
 import org.team2471.frc.lib.units.Angle
 import org.team2471.frc.lib.units.Length
 import org.team2471.frc.lib.units.degrees
+import org.team2471.frc.lib.units.inches
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
@@ -41,23 +42,32 @@ object Armavator : Subsystem("Armavator") {
     val armAngleEntry = table.getEntry("Arm Angle")
     val armSetPointEntry = table.getEntry("Arm Set Point")
     val angleOffset = 96.0.degrees
+    val elevatorHeightEntry = table.getEntry("Elevator Height")
+    val elevatorSetpointEntry = table.getEntry("Elevator Set Point")
+    val elevatorCurrentEntry = table.getEntry("Elevator Current")
 
-    const val ARM_ANGLE_MIN = 7.0
-    const val ARM_ANGLE_MAX = 91.0
-    const val ELEVATOR_MIN = 0.0
-    const val ELEVATOR_MAX = 0.0
-    const val ELEVATOR_START = 0.0
+    val ARM_ANGLE_MIN = 7.0.degrees
+    val ARM_ANGLE_MAX = 91.0.degrees
+    val ELEVATOR_MIN = 0.0.inches
+    val ELEVATOR_MAX = 50.0.inches
+    val ELEVATOR_START = 0.0.inches
 
     var upPressed = false
     var downPressed = false
     var leftPressed = false
     var rightPressed = false
 
-    var elevatorPower = 0.0
+    val elevatorHeight: Length
+        get() = elevatorMotor.position.inches
+    var elevatorSetPoint = elevatorHeight
+        set(value) {
+            field = value.asInches.coerceIn(ELEVATOR_MIN.asInches, ELEVATOR_MAX.asInches).inches
+            elevatorMotor.setPositionSetpoint(field.asInches)
+        }
 
     var armSetPoint = analogAngle
         set(value) {
-            field = value.asDegrees.coerceIn(ARM_ANGLE_MIN, ARM_ANGLE_MAX).degrees
+            field = value.asDegrees.coerceIn(ARM_ANGLE_MIN.asDegrees, ARM_ANGLE_MAX.asDegrees).degrees
             armMotor.setPositionSetpoint(field.asDegrees)
         }
 
@@ -65,8 +75,6 @@ object Armavator : Subsystem("Armavator") {
         get() = armMotor.position.degrees
     val thiefAngle: Angle
         get() = intakePivotMotor.position.degrees
-    val elevatorHeight: Double
-        get() = elevatorMotor.position
 
     val analogAngle: Angle
         get() = -(((armAngleEncoder.voltage - 0.2) / 4.6 * 360.0).degrees) + angleOffset
@@ -84,11 +92,24 @@ object Armavator : Subsystem("Armavator") {
             }
 ////                burnSettings()
         }
+        elevatorMotor.config(20) {
+            inverted(true)
+            brakeMode()
+            currentLimit(25, 30, 1)
+            feedbackCoefficient = 12.0 / 28504 //57609.0  // inche per tick
+            pid {
+                p(0.00000005)
+                d(0.000002)
+            }
+        }
         GlobalScope.launch {
             periodic {
                 armAngleEntry.setDouble(armAngle.asDegrees)
                 armSetPointEntry.setDouble(armSetPoint.asDegrees)
                 armCurrentEntry.setDouble(armMotor.current)
+                elevatorHeightEntry.setDouble(elevatorHeight.asInches)
+                elevatorSetpointEntry.setDouble(elevatorSetPoint.asInches)
+                elevatorCurrentEntry.setDouble(elevatorMotor.current)
             }
         }
     }
@@ -171,21 +192,20 @@ object Armavator : Subsystem("Armavator") {
             }
             if(OI.driverController.dPad != Controller.Direction.UP && upPressed) {
                 upPressed = false
-                elevatorPower += .01
+                elevatorSetPoint += 6.0.inches
                 println("dpad up")
             }
             if(OI.driverController.dPad != Controller.Direction.DOWN && downPressed) {
                 downPressed = false
-                elevatorPower -= .01
+                elevatorSetPoint -= 6.0.inches
                 println("dpad down")
             }
 
-//            println("current: ${elevatorMotor.current} power=$elevatorPower")
-            elevatorMotor.setPercentOutput(elevatorPower)
+           // println("current: ${elevatorMotor.current} setpoint=$elevatorSetPoint height=$elevatorHeight")
 
-            suckMotor.setPercentOutput(if (OI.driverController.x) 1.0 else 0.0)
+            suckMotor.setPercentOutput(if (OI.driverController.y) 1.0 else if (OI.driverController.a) -1.0 else 0.0)
 
-            spitMotor.setPercentOutput(if (OI.driverController.a) 0.8 else 0.0)
+            spitMotor.setPercentOutput(if (OI.driverController.b) 0.8 else if (OI.driverController.x) -0.8 else 0.0)
 
 
         }
