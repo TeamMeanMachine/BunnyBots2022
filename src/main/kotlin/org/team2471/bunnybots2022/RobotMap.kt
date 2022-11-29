@@ -27,10 +27,10 @@ object DigitalSensors {
 }
 
 object PWMServos {
-    const val BUNNY_PINCH = 2
-    const val DEPTH_ONE = 3
-    const val DEPTH_TWO = 4
-    const val INTAKE_PIVOT = 5
+    const val BUNNY_PINCH = 3
+    const val DEPTH_ONE = 1
+    const val DEPTH_TWO = 2
+    const val INTAKE_PIVOT = 0
 }
 
 object Falcons {

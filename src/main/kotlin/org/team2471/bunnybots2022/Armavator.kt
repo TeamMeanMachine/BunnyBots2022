@@ -207,6 +207,9 @@ object Armavator : Subsystem("Armavator") {
 
             spitMotor.setPercentOutput(if (OI.driverController.b) 0.8 else if (OI.driverController.x) -0.8 else 0.0)
 
+            intakePivotMotor.set(0.5 + OI.driverController.rightTrigger*0.5 - OI.driverController.leftTrigger*0.5)
+
+
 
         }
         println("ending periodic")
