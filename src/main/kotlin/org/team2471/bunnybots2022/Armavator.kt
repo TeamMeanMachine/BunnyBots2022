@@ -2,6 +2,7 @@ package org.team2471.bunnybots2022
 
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.AnalogInput
+import edu.wpi.first.wpilibj.DigitalInput
 import edu.wpi.first.wpilibj.DutyCycleEncoder
 import edu.wpi.first.wpilibj.Servo
 import edu.wpi.first.wpilibj.Timer
@@ -34,7 +35,7 @@ object Armavator : Subsystem("Armavator") {
 
     //sensors
     val armAngleEncoder = AnalogInput(AnalogSensors.ARM_ANGLE)
-    //val elevatorEncoder = DutyCycleEncoder(DigitalSensors.INTAKE_ELEVATOR)
+//    val elevatorEncoder = DutyCycleEncoder(DigitalSensors.INTAKE_ELEVATOR)
 
     //data table
     private val table = NetworkTableInstance.getDefault().getTable(Armavator.name)
@@ -45,17 +46,20 @@ object Armavator : Subsystem("Armavator") {
     val elevatorHeightEntry = table.getEntry("Elevator Height")
     val elevatorSetpointEntry = table.getEntry("Elevator Set Point")
     val elevatorCurrentEntry = table.getEntry("Elevator Current")
+    val elevatorSwitchEntry = table.getEntry("Elevator Switch")
 
     val ARM_ANGLE_MIN = 7.0.degrees
     val ARM_ANGLE_MAX = 91.0.degrees
     val ELEVATOR_MIN = 0.0.inches
-    val ELEVATOR_MAX = 50.0.inches
+    val ELEVATOR_MAX = 55.0.inches
     val ELEVATOR_START = 0.0.inches
 
     var upPressed = false
     var downPressed = false
     var leftPressed = false
     var rightPressed = false
+
+    val elevatorSwitch = DigitalInput(0)
 
     val elevatorHeight: Length
         get() = elevatorMotor.position.inches
@@ -97,8 +101,9 @@ object Armavator : Subsystem("Armavator") {
             brakeMode()
             currentLimit(25, 30, 1)
             feedbackCoefficient = 12.0 / 28504 //57609.0  // inche per tick
+            setRawOffsetConfig(21.degrees)
             pid {
-                p(0.00000005)
+                p(0.00000003)
                 d(0.000002)
             }
         }
@@ -110,6 +115,7 @@ object Armavator : Subsystem("Armavator") {
                 elevatorHeightEntry.setDouble(elevatorHeight.asInches)
                 elevatorSetpointEntry.setDouble(elevatorSetPoint.asInches)
                 elevatorCurrentEntry.setDouble(elevatorMotor.current)
+                elevatorSwitchEntry.setBoolean(elevatorSwitch.get())
             }
         }
     }
@@ -161,6 +167,11 @@ object Armavator : Subsystem("Armavator") {
                 stop()
             }
         }
+    }
+
+    override fun preEnable() {
+        super.preEnable()
+        elevatorSetPoint = elevatorHeight
     }
 
     override suspend fun default(){

@@ -77,7 +77,7 @@ object Robot : MeanlibRobot() {
 
     override suspend fun test()  {
         println("test mode begin. Hi.")
-        DepthCharge.score()
+        scoreCharge()
     }
 
 

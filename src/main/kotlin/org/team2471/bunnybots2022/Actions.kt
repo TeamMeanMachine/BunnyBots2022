@@ -16,3 +16,6 @@ suspend fun goToPose(targetPose: Pose, fullCurve: Boolean = false, minTime: Doub
     })
 }
 
+suspend fun scoreCharge() = use(DepthCharge) {
+    DepthCharge.score()
+}
