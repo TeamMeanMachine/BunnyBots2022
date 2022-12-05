@@ -9,7 +9,7 @@ import org.team2471.frc.lib.actuators.TalonID
 object Bunny : Subsystem("Bunny") {
     //motors
     val pinchMotor = Servo(PWMServos.BUNNY_PINCH)
-    val liftMotor = MotorController(TalonID(Talons.BUNNY_LIFT))
+//    val liftMotor = MotorController(TalonID(Talons.BUNNY_LIFT))
 
     //sensors
 //    lift encoder

@@ -275,8 +275,6 @@ object Drive : Subsystem("Drive"), SwerveDrive {
 //               println("XPos: ${position.x.feet} yPos: ${position.y.feet}")
 //                val currRobotPose = fieldObject.robotPose
 
-
-
                 val currRadius = position.length
                 val currAngle = position.angle.radians
                 radialVelocityEntry.setDouble(radialVelocity)

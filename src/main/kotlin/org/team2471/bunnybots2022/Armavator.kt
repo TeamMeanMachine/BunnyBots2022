@@ -3,7 +3,6 @@ package org.team2471.bunnybots2022
 import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.AnalogInput
 import edu.wpi.first.wpilibj.DigitalInput
-import edu.wpi.first.wpilibj.DutyCycleEncoder
 import edu.wpi.first.wpilibj.Servo
 import edu.wpi.first.wpilibj.Timer
 import kotlinx.coroutines.GlobalScope
@@ -11,18 +10,17 @@ import kotlinx.coroutines.launch
 
 import org.team2471.frc.lib.actuators.FalconID
 import org.team2471.frc.lib.actuators.MotorController
-import org.team2471.frc.lib.actuators.SparkMaxID
 import org.team2471.frc.lib.actuators.TalonID
+import org.team2471.frc.lib.coroutines.parallel
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.framework.Subsystem
-import org.team2471.frc.lib.input.Controller
+import org.team2471.frc.lib.framework.use
 import org.team2471.frc.lib.motion_profiling.MotionCurve
 import org.team2471.frc.lib.units.Angle
 import org.team2471.frc.lib.units.Length
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.inches
 import kotlin.math.absoluteValue
-import kotlin.math.roundToInt
 
 
 object Armavator : Subsystem("Armavator") {
@@ -52,7 +50,7 @@ object Armavator : Subsystem("Armavator") {
     val ARM_ANGLE_MAX = 91.0.degrees
     val ELEVATOR_MIN = 0.0.inches
     val ELEVATOR_MAX = 55.0.inches
-    val ELEVATOR_START = 0.0.inches
+    val ELEVATOR_START = 21.0.inches
 
     var upPressed = false
     var downPressed = false
@@ -84,11 +82,12 @@ object Armavator : Subsystem("Armavator") {
         get() = -(((armAngleEncoder.voltage - 0.2) / 4.6 * 360.0).degrees) + angleOffset
 
     init {
+        println("Armavator says hi!")
         armMotor.config(20) {
             // this was from lil bois bench test of swerve
             feedbackCoefficient =
                 (18.0 / 66.0) * (18.0 / 72.0) * (1.0 / 4.0) * (1.0 / 4.0) * (360.0 / 2048.0) // degrees per tick
-            setRawOffsetConfig(analogAngle)
+            setRawOffsetConfig(ARM_ANGLE_MIN) //analogAngle
             currentLimit(15, 20, 1)
             pid {
                 p(0.0000001)
@@ -101,7 +100,7 @@ object Armavator : Subsystem("Armavator") {
             brakeMode()
             currentLimit(25, 30, 1)
             feedbackCoefficient = 12.0 / 28504 //57609.0  // inche per tick
-            setRawOffsetConfig(21.degrees)
+            setRawOffsetConfig(ELEVATOR_START.asInches.degrees) // todo: really inches - this needs changed in meanlib to take a Double
             pid {
                 p(0.00000003)
                 d(0.000002)
@@ -125,10 +124,9 @@ object Armavator : Subsystem("Armavator") {
         return distance / rate
     }
     fun heightChangeTime(target: Double) : Double {
-//        val distance = (height - target)
-//        val rate = if (distance < 0.0) 40.0 else 20.0  // inches per sec
-//        return distance.absoluteValue / rate
-        return 1.0
+        val distance = (elevatorHeight.asInches - target)
+        val rate = 18.0  //inches per second
+        return distance.absoluteValue / rate
     }
     suspend fun changeAngle(target: Double, minTime: Double = 0.0) {
         var time = angleChangeTime(target)
@@ -136,10 +134,9 @@ object Armavator : Subsystem("Armavator") {
             println("Time extended for changeAngle using minTime: $minTime")
             time = minTime
         }
-        changePosition(armAngle.asDegrees, target, time, { value: Double ->
+        changePosition(armAngle.asDegrees, target, time) { value: Double ->
             armSetPoint = value.degrees
-//            updatePositions()
-        })
+        }
     }
 
     suspend fun changeHeight(target: Double, minTime: Double = 0.0) {
@@ -148,10 +145,9 @@ object Armavator : Subsystem("Armavator") {
             println("Time extended for changeHeight using minTime: $minTime")
             time = minTime
         }
-//        changePosition(height, target, time, { value: Double ->
-//            heightSetpoint = value
-//            updatePositions()
-//        })
+        changePosition(elevatorHeight.asInches, target, time) { value: Double ->
+            elevatorSetPoint = value.inches
+        }
     }
     suspend fun changePosition(current: Double, target: Double, time : Double, function: (value : Double) -> (Unit)) {
         val curve = MotionCurve()
@@ -169,59 +165,67 @@ object Armavator : Subsystem("Armavator") {
         }
     }
 
+    suspend fun goToPose(targetPose: Pose, fullCurve: Boolean = true, minTime: Double = 0.0) = use(Armavator) {
+        val time = if (fullCurve) {
+            maxOf(minTime, angleChangeTime(targetPose.armAngle.asDegrees), heightChangeTime(targetPose.elevatorHeight.asInches))
+        } else {
+            minTime
+        }
+        println("Pose Values: $time ${targetPose.elevatorHeight} ${targetPose.armAngle}")
+        parallel({
+            changeHeight(targetPose.elevatorHeight.asInches, time)
+        }, {
+            changeAngle(targetPose.armAngle.asDegrees, time)
+        })
+    }
+
+    suspend fun goToDrivePose() = use(Armavator) {
+        if (elevatorHeight > 39.0.inches) {
+            goToPose(Pose.OVER_BIN_POSE2)
+            goToPose(Pose.OVER_BIN_POSE1)
+        }
+        goToPose(Pose.DRIVE_POSE)
+    }
+    suspend fun goToOverBinPose() = use(Armavator) {
+        goToPose(Pose.OVER_BIN_POSE1)
+        goToPose(Pose.OVER_BIN_POSE2)
+        goToPose(Pose.OVER_BIN_POSE3)
+    }
+    suspend fun goToGroundPose() = use(Armavator) {
+        if (elevatorHeight > 39.0.inches) {
+            goToPose(Pose.OVER_BIN_POSE2)
+            goToPose(Pose.OVER_BIN_POSE1)
+        }
+        goToPose(Pose.GROUND_POSE1)
+        goToPose(Pose.GROUND_POSE2)
+    }
+    suspend fun goToStartPose() = use(Armavator) {
+        if (elevatorHeight > 39.0.inches) {
+            goToPose(Pose.OVER_BIN_POSE2)
+            goToPose(Pose.OVER_BIN_POSE1)
+        }
+        goToPose(Pose.START_POSE)
+    }
+
     override fun preEnable() {
+        println("Armavator preEnable")
         super.preEnable()
         elevatorSetPoint = elevatorHeight
+        armSetPoint = armAngle
     }
 
     override suspend fun default(){
         println("starting periodic")
         periodic {
-            //println("Motor Angle: ${armMotor.position.roundToInt() - analogAngle.asDegrees.roundToInt()}  Set Point: ${armSetPoint} Power: ${(armMotor.output * 100).roundToInt()}")
-
-            if (OI.driverController.dPad == Controller.Direction.LEFT) {
-                leftPressed = true
-            } else if (OI.driverController.dPad == Controller.Direction.RIGHT) {
-                rightPressed = true
-            }
-            if(OI.driverController.dPad != Controller.Direction.LEFT && leftPressed) {
-                leftPressed = false
-                armSetPoint += 45.0.degrees
-                println("dpad left")
-            }
-            if(OI.driverController.dPad != Controller.Direction.RIGHT && rightPressed) {
-                rightPressed = false
-                armSetPoint -= 45.0.degrees
-                println("dpad right")
+            if (elevatorHeight>Pose.OVER_BIN_POSE3.elevatorHeight-18.0.inches && elevatorHeight<Pose.OVER_BIN_POSE3.elevatorHeight+1.0.inches &&
+                    OI.operatorLeftY >= 0.0) {
+                elevatorSetPoint = Pose.OVER_BIN_POSE3.elevatorHeight - 15.0.inches * OI.operatorLeftY
             }
 
+            intakePivotMotor.set(-OI.operatorRightX / 2.0 + 0.5)
 
-            if (OI.driverController.dPad == Controller.Direction.UP) {
-                upPressed = true
-            } else if (OI.driverController.dPad == Controller.Direction.DOWN) {
-                downPressed = true
-            }
-            if(OI.driverController.dPad != Controller.Direction.UP && upPressed) {
-                upPressed = false
-                elevatorSetPoint += 6.0.inches
-                println("dpad up")
-            }
-            if(OI.driverController.dPad != Controller.Direction.DOWN && downPressed) {
-                downPressed = false
-                elevatorSetPoint -= 6.0.inches
-                println("dpad down")
-            }
-
-           // println("current: ${elevatorMotor.current} setpoint=$elevatorSetPoint height=$elevatorHeight")
-
-            suckMotor.setPercentOutput(if (OI.driverController.y) 1.0 else if (OI.driverController.a) -1.0 else 0.0)
-
-            spitMotor.setPercentOutput(if (OI.driverController.b) 0.8 else if (OI.driverController.x) -0.8 else 0.0)
-
-            intakePivotMotor.set(0.5 + OI.driverController.rightTrigger*0.5 - OI.driverController.leftTrigger*0.5)
-
-
-
+            spitMotor.setPercentOutput(OI.operatorRightTrigger - OI.operatorLeftTrigger)
+            suckMotor.setPercentOutput(if (OI.operatorController.rightBumper) 1.0 else if (OI.operatorController.leftBumper) -1.0 else 0.0)
         }
         println("ending periodic")
     }
