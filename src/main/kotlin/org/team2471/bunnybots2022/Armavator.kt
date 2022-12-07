@@ -45,10 +45,12 @@ object Armavator : Subsystem("Armavator") {
     val elevatorSetpointEntry = table.getEntry("Elevator Set Point")
     val elevatorCurrentEntry = table.getEntry("Elevator Current")
     val elevatorSwitchEntry = table.getEntry("Elevator Switch")
+    val suckMotorCurrentEntry = table.getEntry("Suck Motor Current")
+    val spitMotorCurrentEntry = table.getEntry("Spit Motor Current")
 
     val ARM_ANGLE_MIN = 7.0.degrees
     val ARM_ANGLE_MAX = 91.0.degrees
-    val ELEVATOR_MIN = 0.0.inches
+    val ELEVATOR_MIN = 1.0.inches
     val ELEVATOR_MAX = 55.0.inches
     val ELEVATOR_START = 21.0.inches
 
@@ -115,6 +117,8 @@ object Armavator : Subsystem("Armavator") {
                 elevatorSetpointEntry.setDouble(elevatorSetPoint.asInches)
                 elevatorCurrentEntry.setDouble(elevatorMotor.current)
                 elevatorSwitchEntry.setBoolean(elevatorSwitch.get())
+                suckMotorCurrentEntry.setDouble(suckMotor.current)
+                spitMotorCurrentEntry.setDouble(spitMotor.current)
             }
         }
     }
@@ -180,6 +184,7 @@ object Armavator : Subsystem("Armavator") {
     }
 
     suspend fun goToDrivePose() = use(Armavator) {
+        println("Drive pose!")
         if (elevatorHeight > 39.0.inches) {
             goToPose(Pose.OVER_BIN_POSE2)
             goToPose(Pose.OVER_BIN_POSE1)
@@ -190,6 +195,15 @@ object Armavator : Subsystem("Armavator") {
         goToPose(Pose.OVER_BIN_POSE1)
         goToPose(Pose.OVER_BIN_POSE2)
         goToPose(Pose.OVER_BIN_POSE3)
+    }
+    suspend fun goToUnderBinPose() = use(Armavator) {
+        if (elevatorHeight > 39.0.inches) {
+            goToPose(Pose.OVER_BIN_POSE2)
+            goToPose(Pose.OVER_BIN_POSE1)
+        }
+        goToPose(Pose.DRIVE_POSE)
+//        goToPose(Pose.UNDER_BIN_POSE1)
+        goToPose(Pose.UNDER_BIN_POSE2)
     }
     suspend fun goToGroundPose() = use(Armavator) {
         if (elevatorHeight > 39.0.inches) {
@@ -217,8 +231,8 @@ object Armavator : Subsystem("Armavator") {
     override suspend fun default(){
         println("starting periodic")
         periodic {
-            if (elevatorHeight>Pose.OVER_BIN_POSE3.elevatorHeight-18.0.inches && elevatorHeight<Pose.OVER_BIN_POSE3.elevatorHeight+1.0.inches &&
-                    OI.operatorLeftY >= 0.0) {
+            if (elevatorHeight>Pose.OVER_BIN_POSE3.elevatorHeight-16.0.inches && elevatorHeight<Pose.OVER_BIN_POSE3.elevatorHeight+1.0.inches &&
+                    OI.operatorLeftY >= 0.1) {
                 elevatorSetPoint = Pose.OVER_BIN_POSE3.elevatorHeight - 15.0.inches * OI.operatorLeftY
             }
 
@@ -226,6 +240,18 @@ object Armavator : Subsystem("Armavator") {
 
             spitMotor.setPercentOutput(OI.operatorRightTrigger - OI.operatorLeftTrigger)
             suckMotor.setPercentOutput(if (OI.operatorController.rightBumper) 1.0 else if (OI.operatorController.leftBumper) -1.0 else 0.0)
+            //        ({operatorController.dPad == Controller.Direction.RIGHT}).whenTrue {
+//            Armavator.goToDrivePose()
+//        }
+//        ({operatorController.dPad == Controller.Direction.UP}).whenTrue {
+//            Armavator.goToOverBinPose()
+//        }
+//        ({operatorController.dPad == Controller.Direction.LEFT}).whenTrue {
+//            Armavator.goToGroundPose()
+//        }
+//        ({operatorController.dPad == Controller.Direction.DOWN}).whenTrue {
+//            Armavator.goToUnderBinPose()
+//        }
         }
         println("ending periodic")
     }
