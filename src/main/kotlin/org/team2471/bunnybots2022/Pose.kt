@@ -18,6 +18,7 @@ data class Pose(val elevatorHeight: Length, val armAngle: Angle) {
         val OVER_BIN_POSE2 = Pose(Armavator.ELEVATOR_MAX, 90.degrees)
         val OVER_BIN_POSE3 = Pose(41.inches, 90.degrees)
 
+
         val GROUND_POSE1 = Pose(Armavator.ELEVATOR_START, 44.degrees) //kind of tight--have drivers be able to adjust for error
         val GROUND_POSE2 = Pose(12.5.inches, 44.degrees)
         val UNDER_BIN_POSE1 = Pose(Armavator.elevatorSetPoint, 90.degrees)

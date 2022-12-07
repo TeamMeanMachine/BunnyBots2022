@@ -23,12 +23,15 @@ object DepthCharge : Subsystem("DepthCharge") {
         }
     }
 
-    suspend fun score() {
+    suspend fun score(leftMotor: Boolean) {
         val timer = Timer()
         timer.start()
         periodic {
-            secondMotor.set(0.0)
-            firstMotor.set(1.0)
+            if(leftMotor) {
+                secondMotor.set(0.0)
+            } else {
+                firstMotor.set(1.0)
+            }
             println("timer=${timer.get()}")
             if (timer.get() > 2.0) {
                 stop()
