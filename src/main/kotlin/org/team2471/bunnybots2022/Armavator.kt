@@ -21,6 +21,7 @@ import org.team2471.frc.lib.units.Length
 import org.team2471.frc.lib.units.degrees
 import org.team2471.frc.lib.units.inches
 import kotlin.math.absoluteValue
+import kotlin.math.max
 
 
 object Armavator : Subsystem("Armavator") {
@@ -59,6 +60,11 @@ object Armavator : Subsystem("Armavator") {
     var leftPressed = false
     var rightPressed = false
 
+    val underBinElevatorCurve = MotionCurve()
+    val underBinArmCurve = MotionCurve()
+    val underBinElevatorCurveB = MotionCurve()
+    val underBinArmCurveB = MotionCurve()
+
     val elevatorSwitch = DigitalInput(0)
 
     val elevatorHeight: Length
@@ -90,6 +96,7 @@ object Armavator : Subsystem("Armavator") {
             feedbackCoefficient =
                 (18.0 / 66.0) * (18.0 / 72.0) * (1.0 / 4.0) * (1.0 / 4.0) * (360.0 / 2048.0) // degrees per tick
             setRawOffsetConfig(ARM_ANGLE_MIN) //analogAngle
+//            setRawOffsetConfig(ARM_ANGLE_MAX) //analogAngle
             currentLimit(15, 20, 1)
             pid {
                 p(0.0000001)
@@ -103,11 +110,35 @@ object Armavator : Subsystem("Armavator") {
             currentLimit(25, 30, 1)
             feedbackCoefficient = 12.0 / 28504 //57609.0  // inche per tick
             setRawOffsetConfig(ELEVATOR_START.asInches.degrees) // todo: really inches - this needs changed in meanlib to take a Double
+//            setRawOffsetConfig(ELEVATOR_MAX.asInches.degrees)
             pid {
                 p(0.00000003)
                 d(0.000002)
             }
         }
+
+        underBinArmCurve.storeValue(0.0, Pose.UNDER_BIN_POSE1.armAngle.asDegrees)
+        underBinElevatorCurve.storeValue(0.0, Pose.UNDER_BIN_POSE1.elevatorHeight.asInches)
+        underBinArmCurve.storeValue(0.5, Pose.UNDER_BIN_POSE2.armAngle.asDegrees)
+        underBinElevatorCurve.storeValue(0.5, Pose.UNDER_BIN_POSE2.elevatorHeight.asInches)
+        underBinArmCurve.storeValue(1.0, Pose.UNDER_BIN_POSE3.armAngle.asDegrees)
+        underBinElevatorCurve.storeValue(1.0, Pose.UNDER_BIN_POSE3.elevatorHeight.asInches)
+        underBinArmCurve.storeValue(1.5, Pose.UNDER_BIN_POSE4.armAngle.asDegrees)
+        underBinElevatorCurve.storeValue(2.0, Pose.UNDER_BIN_POSE4.elevatorHeight.asInches)
+        underBinArmCurve.storeValue(2.25, Pose.UNDER_BIN_POSE5.armAngle.asDegrees)
+        underBinElevatorCurve.storeValue(2.5, Pose.UNDER_BIN_POSE5.elevatorHeight.asInches)
+
+        underBinArmCurveB.storeValue(0.0, Pose.UNDER_BIN_POSE1.armAngle.asDegrees)
+        underBinElevatorCurveB.storeValue(0.0, Pose.UNDER_BIN_POSE1.elevatorHeight.asInches)
+        underBinArmCurveB.storeValue(0.5, Pose.UNDER_BIN_POSE2.armAngle.asDegrees)
+        underBinElevatorCurveB.storeValue(0.5, Pose.UNDER_BIN_POSE2.elevatorHeight.asInches)
+        underBinArmCurveB.storeValue(1.0, Pose.UNDER_BIN_POSE3.armAngle.asDegrees)
+        underBinElevatorCurveB.storeValue(1.0, Pose.UNDER_BIN_POSE3.elevatorHeight.asInches - 2.0)
+        underBinArmCurveB.storeValue(1.5, Pose.UNDER_BIN_POSE4.armAngle.asDegrees)
+        underBinElevatorCurveB.storeValue(1.5, Pose.UNDER_BIN_POSE4.elevatorHeight.asInches - 2.0)
+        underBinArmCurveB.storeValue(2.25, Pose.UNDER_BIN_POSE5.armAngle.asDegrees)
+        underBinElevatorCurveB.storeValue(2.5, Pose.UNDER_BIN_POSE5.elevatorHeight.asInches)
+
         GlobalScope.launch {
             periodic {
                 armAngleEntry.setDouble(armAngle.asDegrees)
@@ -189,21 +220,18 @@ object Armavator : Subsystem("Armavator") {
             goToPose(Pose.OVER_BIN_POSE2)
             goToPose(Pose.OVER_BIN_POSE1)
         }
+        else if (elevatorHeight < Pose.DRIVE_POSE.elevatorHeight && armAngle > ARM_ANGLE_MAX - 7.0.degrees) {
+            underBinToDrivePose()
+        }
         goToPose(Pose.DRIVE_POSE)
     }
     suspend fun goToOverBinPose() = use(Armavator) {
+        if (elevatorHeight < Pose.DRIVE_POSE.elevatorHeight && armAngle > ARM_ANGLE_MAX - 7.0.degrees) {
+            underBinToDrivePose()
+        }
         goToPose(Pose.OVER_BIN_POSE1)
         goToPose(Pose.OVER_BIN_POSE2)
         goToPose(Pose.OVER_BIN_POSE3)
-    }
-    suspend fun goToUnderBinPose() = use(Armavator) {
-        if (elevatorHeight > 39.0.inches) {
-            goToPose(Pose.OVER_BIN_POSE2)
-            goToPose(Pose.OVER_BIN_POSE1)
-        }
-        goToPose(Pose.DRIVE_POSE)
-//        goToPose(Pose.UNDER_BIN_POSE1)
-        goToPose(Pose.UNDER_BIN_POSE2)
     }
     suspend fun goToGroundPose() = use(Armavator) {
         if (elevatorHeight > 39.0.inches) {
@@ -218,7 +246,43 @@ object Armavator : Subsystem("Armavator") {
             goToPose(Pose.OVER_BIN_POSE2)
             goToPose(Pose.OVER_BIN_POSE1)
         }
+        else if (elevatorHeight < Pose.DRIVE_POSE.elevatorHeight && armAngle > ARM_ANGLE_MAX - 7.0.degrees) {
+            underBinToDrivePose()
+        }
+
         goToPose(Pose.START_POSE)
+    }
+
+    suspend fun goToUnderBinPose() = use(Armavator) {
+        underBinElevatorCurve.storeValue(0.0, elevatorHeight.asInches)
+        underBinArmCurve.storeValue(0.0, armAngle.asDegrees)
+        val timer = Timer()
+        timer.start()
+        periodic {
+            val t = timer.get()
+            elevatorSetPoint = underBinElevatorCurve.getValue(t).inches
+            armSetPoint = underBinArmCurve.getValue(t).degrees
+
+            if (t >= max(underBinArmCurve.length, underBinElevatorCurve.length)) {
+                stop()
+            }
+        }
+    }
+    suspend fun underBinToDrivePose() = use(Armavator) {
+        underBinElevatorCurveB.storeValue(0.0, Pose.DRIVE_POSE.elevatorHeight.asInches)
+        underBinArmCurveB.storeValue(0.0, Pose.DRIVE_POSE.armAngle.asDegrees)
+        val maxTime = max(underBinArmCurveB.length, underBinElevatorCurveB.length)
+        val timer = Timer()
+        timer.start()
+        periodic {
+            val t = maxTime - timer.get()
+            elevatorSetPoint = underBinElevatorCurveB.getValue(t).inches
+            armSetPoint = underBinArmCurveB.getValue(t).degrees
+
+            if (t <= 0.0) {
+                stop()
+            }
+        }
     }
 
     override fun preEnable() {
