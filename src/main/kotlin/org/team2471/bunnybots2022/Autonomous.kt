@@ -57,7 +57,7 @@ object AutoChooser {
         addOption("4 Foot Circle", "4 Foot Circle")
         addOption("8 Foot Circle", "8 Foot Circle")
         addOption("Hook Path", "Hook Path")
-        addOption("Right", "Right")
+        addOption("Right Complex", "Right Complex")
         setDefaultOption("90 Degree Turn", "90 Degree Turn")
 
 
@@ -124,7 +124,7 @@ object AutoChooser {
         when (selAuto) {
             "Tests" -> testAuto()
             "Carpet Bias Test" -> carpetBiasTest()
-            "Right" -> Right()
+            "Right" -> RightComplex()
             else -> println("No function found for ---->$selAuto<-----  ${Robot.recentTimeTaken()}")
         }
         SmartDashboard.putString("autoStatus", "complete")
@@ -156,9 +156,9 @@ object AutoChooser {
             //path = auto["05- Backward"]
         }
     }
-    suspend fun Right() = use(Drive, Armavator, DepthCharge) {
-        val auto = autonomi["Right"]
-        if(auto!= null) {
+    suspend fun RightComplex() = use(Drive, Armavator, DepthCharge) {
+        val auto = autonomi["Bunny Bot Right"]
+        if(auto != null) {
             Armavator.goToDrivePose()
           //  var path = auto["1 - Grab Bunny"]
           //  Drive.driveAlongPath(path, false)
@@ -211,6 +211,29 @@ object AutoChooser {
         val auto = autonomi["Tests"]
         if (auto != null){
             Drive.driveAlongPath(auto[""], true, 2.0)
+        }
+    }
+
+    suspend fun RightSimple() = use (Drive, Armavator, DepthCharge) {
+        val auto = autonomi["Bunny Bot Simple"]
+        if(auto != null) {
+            Armavator.goToDrivePose()
+            var path = auto["1 - Forward"]
+            Drive.driveAlongPath(path, resetOdometry = false)
+            var path2 = auto["2 - Maneuver"]
+            Drive.driveAlongPath(path2, resetOdometry = false)
+            parallel({
+                Armavator.goToOverBinPose()
+                Armavator.suckMotor.setPercentOutput(-1.0)
+                delay(1.0)
+                Armavator.suckMotor.setPercentOutput(0.0)
+            }, {
+                DepthCharge.score(false)
+            })
+            Armavator.goToDrivePose()
+            path = auto["3 - Bin Backup"]
+            Drive.driveAlongPath(path, false)
+            DepthCharge.score(true)
         }
     }
 
