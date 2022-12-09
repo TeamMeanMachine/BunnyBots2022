@@ -3,5 +3,5 @@ import org.team2471.frc.lib.coroutines.parallel
 import org.team2471.frc.lib.framework.use
 
 suspend fun scoreCharge() = use(DepthCharge) {
-    DepthCharge.score()
+    DepthCharge.score(false)
 }

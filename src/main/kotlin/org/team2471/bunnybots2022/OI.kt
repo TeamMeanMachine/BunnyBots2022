@@ -53,18 +53,20 @@ object OI {
     init {
         driverController::back.whenTrue { Drive.zeroGyro(); Drive.initializeSteeringMotors() }
 
-        ({operatorController.dPad == Controller.Direction.DOWN}).whenTrue {
+
+        operatorController::b.whenTrue {
             Armavator.goToDrivePose()
         }
-        ({operatorController.dPad == Controller.Direction.UP}).whenTrue {
+        operatorController::y.whenTrue {
             Armavator.goToOverBinPose()
         }
-        ({operatorController.dPad == Controller.Direction.RIGHT}).whenTrue {
+        operatorController::a.whenTrue {
             Armavator.goToGroundPose()
         }
-        ({operatorController.dPad == Controller.Direction.LEFT}).whenTrue {
-            Armavator.goToStartPose()
+        operatorController::x.whenTrue {
+            Armavator.goToUnderBinPose()
         }
+        operatorController::back.whenTrue {Armavator.goToStartPose()}
         // driverController::y.whenTrue { goToPose(Pose.N_Pos)}
 
         // driverController::b.whenTrue { goToPose(Pose.START_POS)}
