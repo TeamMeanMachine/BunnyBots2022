@@ -3,6 +3,8 @@
 package org.team2471.bunnybots2022
 
 import BunnyBots____.BuildConfig
+import edu.wpi.first.cameraserver.CameraServer
+import edu.wpi.first.cscore.UsbCamera
 import edu.wpi.first.wpilibj.RobotBase
 import kotlinx.coroutines.DelicateCoroutinesApi
 import org.team2471.frc.lib.framework.MeanlibRobot
@@ -38,6 +40,8 @@ object Robot : MeanlibRobot() {
         repeat(25) {
             println("RANDOM NUMBER: ${Math.random()}")
         }
+        val camera = CameraServer.startAutomaticCapture()
+        camera.setResolution(160, 120);
         println("TAKE ME HOOOOOME COUNTRY ROOOOOOOOADS TOOO THE PLAAAAAAACE WHERE I BELOOOOOOOOONG")
         println(BuildConfig.BUILD_TIME)
 //        Drive.zeroGyro()
@@ -79,6 +83,8 @@ object Robot : MeanlibRobot() {
     override suspend fun test()  {
         println("test mode begin. Hi.")
         scoreCharge()
+        //Drive.setAngleOffsets()
+        //Drive.steeringTests()
     }
 
 

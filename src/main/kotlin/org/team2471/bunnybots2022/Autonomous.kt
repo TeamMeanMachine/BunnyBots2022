@@ -125,6 +125,7 @@ object AutoChooser {
             "Tests" -> testAuto()
             "Carpet Bias Test" -> carpetBiasTest()
             "Right" -> RightComplex()
+
             else -> println("No function found for ---->$selAuto<-----  ${Robot.recentTimeTaken()}")
         }
         SmartDashboard.putString("autoStatus", "complete")
@@ -220,7 +221,7 @@ object AutoChooser {
             Armavator.goToDrivePose()
             var path = auto["1 - Forward"]
             Drive.driveAlongPath(path, resetOdometry = false)
-            var path2 = auto["2 - Maneuver"]
+            var path2 = auto["2 - Forward Again"]
             Drive.driveAlongPath(path2, resetOdometry = false)
             parallel({
                 Armavator.goToOverBinPose()

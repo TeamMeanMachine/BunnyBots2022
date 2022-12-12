@@ -1,7 +1,6 @@
 package org.team2471.bunnybots2022
 
 import edu.wpi.first.networktables.NetworkTableInstance
-import edu.wpi.first.wpilibj.AnalogInput
 import edu.wpi.first.wpilibj.DigitalInput
 import edu.wpi.first.wpilibj.Servo
 import edu.wpi.first.wpilibj.Timer
@@ -11,6 +10,7 @@ import kotlinx.coroutines.launch
 import org.team2471.frc.lib.actuators.FalconID
 import org.team2471.frc.lib.actuators.MotorController
 import org.team2471.frc.lib.actuators.TalonID
+import org.team2471.frc.lib.coroutines.delay
 import org.team2471.frc.lib.coroutines.parallel
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.framework.Subsystem
@@ -33,7 +33,7 @@ object Armavator : Subsystem("Armavator") {
     val elevatorMotor = MotorController(FalconID(Falcons.ELEVATOR))
 
     //sensors
-    val armAngleEncoder = AnalogInput(AnalogSensors.ARM_ANGLE)
+//    val armAngleEncoder = AnalogInput(AnalogSensors.ARM_ANGLE)
 //    val elevatorEncoder = DutyCycleEncoder(DigitalSensors.INTAKE_ELEVATOR)
 
     //data table
@@ -54,6 +54,14 @@ object Armavator : Subsystem("Armavator") {
     val ELEVATOR_MIN = 1.0.inches
     val ELEVATOR_MAX = 55.0.inches
     val ELEVATOR_START = 21.0.inches
+    val ELEVATOR_BREAKING_POINT = 20.0.inches
+    val ELEVATOR_TUBE_TIME_MAX = 0.75
+    val ARM_TUBE_TIME_MAX = 0.25
+    val BIN_DEPTH = 17.0.inches
+    val FLOOR_DEPTH = 11.0.degrees
+
+    var tubeTime = 0.0
+        set(value) { field = value.coerceIn(0.0, ELEVATOR_TUBE_TIME_MAX) }
 
     var upPressed = false
     var downPressed = false
@@ -64,6 +72,8 @@ object Armavator : Subsystem("Armavator") {
     val underBinArmCurve = MotionCurve()
     val underBinElevatorCurveB = MotionCurve()
     val underBinArmCurveB = MotionCurve()
+    val elevatorTubeCurve = MotionCurve()
+    val armTubeCurve = MotionCurve()
 
     val elevatorSwitch = DigitalInput(0)
 
@@ -75,7 +85,7 @@ object Armavator : Subsystem("Armavator") {
             elevatorMotor.setPositionSetpoint(field.asInches)
         }
 
-    var armSetPoint = analogAngle
+    var armSetPoint = ARM_ANGLE_MIN
         set(value) {
             field = value.asDegrees.coerceIn(ARM_ANGLE_MIN.asDegrees, ARM_ANGLE_MAX.asDegrees).degrees
             armMotor.setPositionSetpoint(field.asDegrees)
@@ -86,8 +96,8 @@ object Armavator : Subsystem("Armavator") {
     val thiefAngle: Angle
         get() = intakePivotMotor.position.degrees
 
-    val analogAngle: Angle
-        get() = -(((armAngleEncoder.voltage - 0.2) / 4.6 * 360.0).degrees) + angleOffset
+//    val analogAngle: Angle
+//        get() = -(((armAngleEncoder.voltage - 0.2) / 4.6 * 360.0).degrees) + angleOffset
 
     init {
         println("Armavator says hi!")
@@ -138,6 +148,12 @@ object Armavator : Subsystem("Armavator") {
         underBinElevatorCurveB.storeValue(1.5, Pose.UNDER_BIN_POSE4.elevatorHeight.asInches - 2.0)
         underBinArmCurveB.storeValue(2.25, Pose.UNDER_BIN_POSE5.armAngle.asDegrees)
         underBinElevatorCurveB.storeValue(2.5, Pose.UNDER_BIN_POSE5.elevatorHeight.asInches)
+
+        elevatorTubeCurve.storeValue(0.0, Pose.OVER_BIN_POSE3.elevatorHeight.asInches)
+        elevatorTubeCurve.storeValue(ELEVATOR_TUBE_TIME_MAX, Pose.OVER_BIN_POSE3.elevatorHeight.asInches - BIN_DEPTH.asInches)
+
+        armTubeCurve.storeValue(0.0, Pose.UNDER_BIN_POSE5.armAngle.asDegrees)
+        armTubeCurve.storeValue(ARM_TUBE_TIME_MAX, Pose.UNDER_BIN_POSE5.armAngle.asDegrees - FLOOR_DEPTH.asDegrees)
 
         GlobalScope.launch {
             periodic {
@@ -216,7 +232,12 @@ object Armavator : Subsystem("Armavator") {
 
     suspend fun goToDrivePose() = use(Armavator) {
         println("Drive pose!")
-        if (elevatorHeight > 39.0.inches) {
+        if ((elevatorHeight - Pose.DRIVE_POSE.elevatorHeight).asInches.absoluteValue < 1.0 && (armAngle - Pose.DRIVE_POSE.armAngle).asDegrees.absoluteValue < 2.0 ) {
+            println("Already at Drive Pose")
+        } else if ((elevatorHeight - Pose.START_POSE.elevatorHeight).asInches.absoluteValue < 1.0 && (armAngle - Pose.START_POSE.armAngle).asDegrees.absoluteValue < 2.0 ) {
+            println("At Start Pose")
+        }
+        else if (elevatorHeight > ELEVATOR_BREAKING_POINT) {
             goToPose(Pose.OVER_BIN_POSE2)
             goToPose(Pose.OVER_BIN_POSE1)
         }
@@ -225,49 +246,57 @@ object Armavator : Subsystem("Armavator") {
         }
         goToPose(Pose.DRIVE_POSE)
     }
+
     suspend fun goToOverBinPose() = use(Armavator) {
-        if (elevatorHeight < Pose.DRIVE_POSE.elevatorHeight && armAngle > ARM_ANGLE_MAX - 7.0.degrees) {
+        if (isPose(Pose.UNDER_BIN_POSE5, 2.0, 12.0)) {
             underBinToDrivePose()
-        }
-        goToPose(Pose.OVER_BIN_POSE1)
-        goToPose(Pose.OVER_BIN_POSE2)
-        goToPose(Pose.OVER_BIN_POSE3)
-    }
-    suspend fun goToGroundPose() = use(Armavator) {
-        if (elevatorHeight > 39.0.inches) {
-            goToPose(Pose.OVER_BIN_POSE2)
-            goToPose(Pose.OVER_BIN_POSE1)
-        }
-        goToPose(Pose.GROUND_POSE1)
-        goToPose(Pose.GROUND_POSE2)
-    }
-    suspend fun goToStartPose() = use(Armavator) {
-        if (elevatorHeight > 39.0.inches) {
-            goToPose(Pose.OVER_BIN_POSE2)
-            goToPose(Pose.OVER_BIN_POSE1)
-        }
-        else if (elevatorHeight < Pose.DRIVE_POSE.elevatorHeight && armAngle > ARM_ANGLE_MAX - 7.0.degrees) {
-            underBinToDrivePose()
+        } else if (isPose(Pose.GROUND_POSE2)) {
+            goToDrivePose()
         }
 
+        if (isPose(Pose.OVER_BIN_POSE3, 17.0)) {
+            println("Already Over Bin Pose")
+        } else {
+            goToPose(Pose.OVER_BIN_POSE1)
+            goToPose(Pose.OVER_BIN_POSE2)
+            goToPose(Pose.OVER_BIN_POSE3)
+        }
+    }
+
+    suspend fun goToGroundPose() = use(Armavator) {
+        if (isPose(Pose.OVER_BIN_POSE3, 17.0) || isPose(Pose.START_POSE)) goToDrivePose()
+        if (!isPose(Pose.GROUND_POSE2)) goToPose(Pose.GROUND_POSE1)
+        goToPose(Pose.GROUND_POSE2)
+    }
+
+    suspend fun goToStartPose() = use(Armavator) {
+        if ((elevatorHeight - Pose.START_POSE.elevatorHeight).asInches.absoluteValue < 1.0 && (armAngle - Pose.START_POSE.armAngle).asDegrees.absoluteValue < 2.0 ) {
+            println("Already at Start Pose")
+        } else { goToDrivePose() }
         goToPose(Pose.START_POSE)
     }
 
     suspend fun goToUnderBinPose() = use(Armavator) {
-        underBinElevatorCurve.storeValue(0.0, elevatorHeight.asInches)
-        underBinArmCurve.storeValue(0.0, armAngle.asDegrees)
-        val timer = Timer()
-        timer.start()
-        periodic {
-            val t = timer.get()
-            elevatorSetPoint = underBinElevatorCurve.getValue(t).inches
-            armSetPoint = underBinArmCurve.getValue(t).degrees
+        if (isPose(Pose.OVER_BIN_POSE3, 16.0, 2.0) || isPose(Pose.GROUND_POSE2)) {
+            goToDrivePose()
+        }
+        if (isPose(Pose.DRIVE_POSE) || isPose(Pose.START_POSE)) {
+            underBinElevatorCurve.storeValue(0.0, elevatorHeight.asInches)
+            underBinArmCurve.storeValue(0.0, armAngle.asDegrees)
+            val timer = Timer()
+            timer.start()
+            periodic {
+                val t = timer.get()
+                elevatorSetPoint = underBinElevatorCurve.getValue(t).inches
+                armSetPoint = underBinArmCurve.getValue(t).degrees
 
-            if (t >= max(underBinArmCurve.length, underBinElevatorCurve.length)) {
-                stop()
+                if (t >= max(underBinArmCurve.length, underBinElevatorCurve.length)) {
+                    stop()
+                }
             }
         }
     }
+
     suspend fun underBinToDrivePose() = use(Armavator) {
         underBinElevatorCurveB.storeValue(0.0, Pose.DRIVE_POSE.elevatorHeight.asInches)
         underBinArmCurveB.storeValue(0.0, Pose.DRIVE_POSE.armAngle.asDegrees)
@@ -285,6 +314,10 @@ object Armavator : Subsystem("Armavator") {
         }
     }
 
+    fun isPose(pose: Pose, eDiff: Double = 2.0, aDiff: Double = 2.0) : Boolean {
+        return (elevatorHeight - pose.elevatorHeight).asInches.absoluteValue < eDiff && (armAngle - pose.armAngle).asDegrees.absoluteValue < aDiff
+    }
+
     override fun preEnable() {
         println("Armavator preEnable")
         super.preEnable()
@@ -295,10 +328,18 @@ object Armavator : Subsystem("Armavator") {
     override suspend fun default(){
         println("starting periodic")
         periodic {
-            if (elevatorHeight>Pose.OVER_BIN_POSE3.elevatorHeight-16.0.inches && elevatorHeight<Pose.OVER_BIN_POSE3.elevatorHeight+1.0.inches &&
-                    OI.operatorLeftY >= 0.1) {
-                elevatorSetPoint = Pose.OVER_BIN_POSE3.elevatorHeight - 15.0.inches * OI.operatorLeftY
+            if (elevatorHeight > Pose.OVER_BIN_POSE3.elevatorHeight - BIN_DEPTH - 1.0.inches && elevatorHeight < Pose.OVER_BIN_POSE3.elevatorHeight + 1.0.inches
+                && armAngle > 80.0.degrees) {
+                tubeTime += OI.operatorLeftY * 0.02
+                elevatorSetPoint = elevatorTubeCurve.getValue(tubeTime).inches
+            } else if (elevatorHeight < Pose.UNDER_BIN_POSE5.elevatorHeight + 1.0.inches && armAngle > Pose.UNDER_BIN_POSE5.armAngle - FLOOR_DEPTH - 5.0.degrees) {
+                tubeTime += OI.operatorLeftY * 0.02
+                armSetPoint = armTubeCurve.getValue(tubeTime).degrees
             }
+            else {
+                tubeTime = 0.0
+            }
+            println("tubeTime = $tubeTime")
 
             intakePivotMotor.set(-OI.operatorRightX / 2.0 + 0.5)
 
