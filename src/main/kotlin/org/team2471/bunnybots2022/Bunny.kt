@@ -19,8 +19,8 @@ object Bunny : Subsystem("Bunny") {
     val bunnyExtend = MotorController(SparkMaxID(Sparks.BUNNY_EXTEND))
     val bunnyExtendSensor = AnalogInput(AnalogSensors.BUNNY_EXTEND)
 
-    const val EXTEND_ANGLE_MIN = 40.0
-    const val EXTEND_ANGLE_MAX = 121.0
+    const val EXTEND_ANGLE_MIN = 35.0
+    const val EXTEND_ANGLE_MAX = 121.0 //recheck
     const val EXTEND_ANGLE_OUT = 50.0
     const val EXTEND_ANGLE_IN = 90.0
 
@@ -30,7 +30,6 @@ object Bunny : Subsystem("Bunny") {
     var extendSetPoint = analogAngle //
         set(value) {
             field = value.asDegrees.coerceIn(EXTEND_ANGLE_MIN, EXTEND_ANGLE_MAX).degrees
-            println("setpoint = $field   analogAngle = $analogAngle")
             bunnyExtend.setPositionSetpoint(field.asDegrees)
         }
 
@@ -47,6 +46,7 @@ object Bunny : Subsystem("Bunny") {
             }
         }
         GlobalScope.launch {
+
             periodic(0.1) {
                 bunnyExtend.setRawOffset(analogAngle)
             }
@@ -65,8 +65,8 @@ object Bunny : Subsystem("Bunny") {
     override suspend fun default() {
         println("starting periodic")
         periodic {
-            leftPinchMotor.set(if (OI.driverController.leftBumper) 0.5 else 1.0)
-            rightPinchMotor.set(if (OI.driverController.rightBumper) 0.0 else 0.5)
+            leftPinchMotor.set(if (OI.driverController.b) 0.5 else 1.0)
+            rightPinchMotor.set(if (OI.driverController.b) 0.0 else 0.5)
 //            bunnyExtend.setPercentOutput(OI.operatorRightX * 0.3)
             extendSetPoint -= (OI.driveRightTrigger * 5.0).degrees
             extendSetPoint += (OI.driveLeftTrigger * 5.0).degrees

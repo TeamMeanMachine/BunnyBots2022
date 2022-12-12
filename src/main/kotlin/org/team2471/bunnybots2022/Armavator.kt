@@ -339,7 +339,6 @@ object Armavator : Subsystem("Armavator") {
             else {
                 tubeTime = 0.0
             }
-            println("tubeTime = $tubeTime")
 
             intakePivotMotor.set(-OI.operatorRightX / 2.0 + 0.5)
 
