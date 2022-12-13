@@ -48,7 +48,7 @@ object Robot : MeanlibRobot() {
 //        Drive.heading = 0.0.degrees
         AutoChooser
         Armavator
-        Bunny
+//        Bunny
         DepthCharge
         Drive
     }
@@ -57,7 +57,7 @@ object Robot : MeanlibRobot() {
         println("starting enable")
         Drive.enable()
         Armavator.enable()
-        Bunny.enable()
+//        Bunny.enable()
         DepthCharge.enable()
         println("ending enable")
     }
@@ -82,8 +82,8 @@ object Robot : MeanlibRobot() {
 
     override suspend fun test()  {
         println("test mode begin. Hi.")
-        scoreCharge()
-        //Drive.setAngleOffsets()
+//        scoreCharge()
+//        Drive.setAngleOffsets()
         //Drive.steeringTests()
     }
 
@@ -93,7 +93,7 @@ object Robot : MeanlibRobot() {
     override suspend fun disable() {
         Drive.disable()
         Armavator.disable()
-        Bunny.disable()
+//        Bunny.disable()
         DepthCharge.disable()
         OI.operatorController.rumble = 0.0
 //        PowerDistribution.disable()

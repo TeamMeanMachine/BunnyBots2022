@@ -10,7 +10,7 @@ object Talons {
 
 
 object Sparks {
-    const val BUNNY_EXTEND = 10
+//    const val BUNNY_EXTEND = 10
 
 }
 
@@ -25,8 +25,8 @@ object DigitalSensors {
 }
 
 object PWMServos {
-    const val BUNNY_PINCH_LEFT = 3
-    const val BUNNY_PINCH_RIGHT = 4
+//    const val BUNNY_PINCH_LEFT = 3
+//    const val BUNNY_PINCH_RIGHT = 4
     const val DEPTH_ONE = 1
     const val DEPTH_TWO = 2
     const val INTAKE_PIVOT = 0

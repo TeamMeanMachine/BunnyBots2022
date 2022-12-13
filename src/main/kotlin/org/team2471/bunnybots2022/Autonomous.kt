@@ -66,6 +66,7 @@ object AutoChooser {
     private val autonomousChooser = SendableChooser<String?>().apply {
         setDefaultOption("Tests", "testAuto")
         addOption("Rotary", "rotaryAuto")
+        addOption("Right Simple", "rightSimple")
 
 
     }
@@ -124,7 +125,7 @@ object AutoChooser {
         when (selAuto) {
             "Tests" -> testAuto()
             "Carpet Bias Test" -> carpetBiasTest()
-            "Right" -> RightComplex()
+            "Right Simple" -> rightSimple()
 
             else -> println("No function found for ---->$selAuto<-----  ${Robot.recentTimeTaken()}")
         }
@@ -215,19 +216,26 @@ object AutoChooser {
         }
     }
 
-    suspend fun RightSimple() = use (Drive, Armavator, DepthCharge) {
+    suspend fun rightSimple() = use (Drive, Armavator, DepthCharge) {
         val auto = autonomi["Bunny Bot Simple"]
         if(auto != null) {
-            Armavator.goToDrivePose()
+            Armavator.suckMotor.setPercentOutput(1.0)
             var path = auto["1 - Forward"]
-            Drive.driveAlongPath(path, resetOdometry = false)
-            var path2 = auto["2 - Forward Again"]
-            Drive.driveAlongPath(path2, resetOdometry = false)
+            parallel ({
+                Drive.driveAlongPath(path, true, 0.0, true)
+            }, {
+                Armavator.goToGroundPose()
+            })
+            Armavator.suckMotor.setPercentOutput(0.0)
+//            path = auto["2 - Forward Again"]
+//            Drive.driveAlongPath(path, resetOdometry = false)
             parallel({
                 Armavator.goToOverBinPose()
                 Armavator.suckMotor.setPercentOutput(-1.0)
+                Armavator.spitMotor.setPercentOutput(-1.0)
                 delay(1.0)
                 Armavator.suckMotor.setPercentOutput(0.0)
+                Armavator.spitMotor.setPercentOutput(0.0)
             }, {
                 DepthCharge.score(false)
             })
