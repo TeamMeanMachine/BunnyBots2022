@@ -66,7 +66,12 @@ object OI {
         operatorController::x.whenTrue {
             Armavator.goToUnderBinPose()
         }
-        operatorController::back.whenTrue {Armavator.goToStartPose()}
+        operatorController::start.whenTrue {
+            Armavator.goToStartPose()
+        }
+        driverController::start.whenTrue {
+            Armavator.resetOffset()
+        }
         // driverController::y.whenTrue { goToPose(Pose.N_Pos)}
 
         // driverController::b.whenTrue { goToPose(Pose.START_POS)}

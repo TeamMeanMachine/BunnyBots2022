@@ -10,11 +10,11 @@ import kotlinx.coroutines.launch
 import org.team2471.frc.lib.actuators.FalconID
 import org.team2471.frc.lib.actuators.MotorController
 import org.team2471.frc.lib.actuators.TalonID
-import org.team2471.frc.lib.coroutines.delay
 import org.team2471.frc.lib.coroutines.parallel
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.framework.Subsystem
 import org.team2471.frc.lib.framework.use
+import org.team2471.frc.lib.input.Controller
 import org.team2471.frc.lib.motion_profiling.MotionCurve
 import org.team2471.frc.lib.units.Angle
 import org.team2471.frc.lib.units.Length
@@ -75,6 +75,10 @@ object Armavator : Subsystem("Armavator") {
     val elevatorTubeCurve = MotionCurve()
     val armTubeCurve = MotionCurve()
 
+    var driverDPadWasPressed = false
+    var operatorDPadUpWasPressed = false
+    var operatorDPadDownWasPressed = false
+    var tongueOffset = 0.0.inches
     val elevatorSwitch = DigitalInput(0)
 
     val elevatorHeight: Length
@@ -82,13 +86,17 @@ object Armavator : Subsystem("Armavator") {
     var elevatorSetPoint = elevatorHeight
         set(value) {
             field = value.asInches.coerceIn(ELEVATOR_MIN.asInches, ELEVATOR_MAX.asInches).inches
-            elevatorMotor.setPositionSetpoint(field.asInches)
+            if (!driverDPadWasPressed){
+                elevatorMotor.setPositionSetpoint(field.asInches)
+            }
         }
 
     var armSetPoint = ARM_ANGLE_MIN
         set(value) {
             field = value.asDegrees.coerceIn(ARM_ANGLE_MIN.asDegrees, ARM_ANGLE_MAX.asDegrees).degrees
-            armMotor.setPositionSetpoint(field.asDegrees)
+            if (!driverDPadWasPressed) {
+                armMotor.setPositionSetpoint(field.asDegrees)
+            }
         }
 
     val armAngle: Angle
@@ -96,6 +104,11 @@ object Armavator : Subsystem("Armavator") {
     val thiefAngle: Angle
         get() = intakePivotMotor.position.degrees
 
+
+    fun resetOffset() {
+        armMotor.setRawOffset(ARM_ANGLE_MIN)
+        elevatorMotor.setRawOffset(ELEVATOR_START.asInches.degrees)
+    }
 //    val analogAngle: Angle
 //        get() = -(((armAngleEncoder.voltage - 0.2) / 4.6 * 360.0).degrees) + angleOffset
 
@@ -125,6 +138,9 @@ object Armavator : Subsystem("Armavator") {
                 p(0.00000003)
                 d(0.000002)
             }
+        }
+        suckMotor.config(20) {
+            inverted(true)
         }
 
         underBinArmCurve.storeValue(0.0, Pose.UNDER_BIN_POSE1.armAngle.asDegrees)
@@ -259,14 +275,14 @@ object Armavator : Subsystem("Armavator") {
         } else {
             goToPose(Pose.OVER_BIN_POSE1)
             goToPose(Pose.OVER_BIN_POSE2)
-            goToPose(Pose.OVER_BIN_POSE3)
+            goToPose(Pose(Pose.OVER_BIN_POSE3.elevatorHeight + tongueOffset, Pose.OVER_BIN_POSE3.armAngle))
         }
     }
 
     suspend fun goToGroundPose() = use(Armavator) {
         if (isPose(Pose.OVER_BIN_POSE3, 17.0) || isPose(Pose.START_POSE)) goToDrivePose()
         if (!isPose(Pose.GROUND_POSE2)) goToPose(Pose.GROUND_POSE1)
-        goToPose(Pose.GROUND_POSE2)
+        goToPose(Pose(Pose.GROUND_POSE2.elevatorHeight + tongueOffset, Pose.GROUND_POSE2.armAngle))
     }
 
     suspend fun goToStartPose() = use(Armavator) {
@@ -283,6 +299,7 @@ object Armavator : Subsystem("Armavator") {
         if (isPose(Pose.DRIVE_POSE) || isPose(Pose.START_POSE)) {
             underBinElevatorCurve.storeValue(0.0, elevatorHeight.asInches)
             underBinArmCurve.storeValue(0.0, armAngle.asDegrees)
+            underBinElevatorCurve.storeValue(underBinElevatorCurve.length, Pose.UNDER_BIN_POSE5.elevatorHeight.asInches + tongueOffset.asInches)
             val timer = Timer()
             timer.start()
             periodic {
@@ -344,6 +361,51 @@ object Armavator : Subsystem("Armavator") {
 
             spitMotor.setPercentOutput(OI.operatorRightTrigger - OI.operatorLeftTrigger)
             suckMotor.setPercentOutput(if (OI.operatorController.rightBumper) 1.0 else if (OI.operatorController.leftBumper) -1.0 else 0.0)
+
+            when (OI.driverController.dPad) {
+                Controller.Direction.RIGHT -> {
+                    armMotor.setPercentOutput(1.0)
+                    driverDPadWasPressed = true
+                }
+                Controller.Direction.LEFT -> {
+                    armMotor.setPercentOutput(-1.0)
+                    driverDPadWasPressed = true
+                }
+                Controller.Direction.UP -> {
+                    elevatorMotor.setPercentOutput(0.1)
+                    driverDPadWasPressed = true
+                }
+                Controller.Direction.DOWN -> {
+                    elevatorMotor.setPercentOutput(-0.1)
+                    driverDPadWasPressed = true
+                }
+                Controller.Direction.IDLE -> {
+                    if (driverDPadWasPressed) {
+                        armMotor.setPercentOutput(0.0)
+                        elevatorMotor.setPercentOutput(0.0)
+                        driverDPadWasPressed = false
+                    }
+                }
+            }
+            when (OI.operatorController.dPad) {
+                Controller.Direction.UP -> {
+                    operatorDPadUpWasPressed = true
+                }
+                Controller.Direction.DOWN -> {
+                    operatorDPadDownWasPressed = true
+                }
+                Controller.Direction.IDLE -> {
+                    if (operatorDPadUpWasPressed) {
+                        tongueOffset += 0.125.inches
+                        elevatorSetPoint += 0.125.inches
+                        operatorDPadUpWasPressed = false
+                    } else if (operatorDPadDownWasPressed) {
+                        tongueOffset -= 0.125.inches
+                        elevatorSetPoint -= 0.125.inches
+                        operatorDPadDownWasPressed = false
+                    }
+                }
+            }
             //        ({operatorController.dPad == Controller.Direction.RIGHT}).whenTrue {
 //            Armavator.goToDrivePose()
 //        }

@@ -381,12 +381,14 @@ object Drive : Subsystem("Drive"), SwerveDrive {
                 turn = OI.driveRotation
             }
 
+            var speedFactor = linearMap(Pose.DRIVE_POSE.elevatorHeight.asInches, Armavator.ELEVATOR_MAX.asInches, 1.0, 0.4, Armavator.elevatorHeight.asInches).coerceIn(0.4, 1.0)
+
             printEncoderValues()
 
             headingSetpoint = OI.driverController.povDirection
 
             drive(
-                OI.driveTranslation,
+                OI.driveTranslation * speedFactor,
                 turn,
                 SmartDashboard.getBoolean("Use Gyro", true) && !DriverStation.isAutonomous(),
                 false
