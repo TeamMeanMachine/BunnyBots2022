@@ -77,7 +77,7 @@ object Drive : Subsystem("Drive"), SwerveDrive {
             MotorController(FalconID(Falcons.DRIVE_FRONTLEFT)),
             MotorController(FalconID(Falcons.STEER_FRONTLEFT)),
             Vector2(-11.5, 14.0),
-            Preferences.getDouble("Angle Offset 0",0.0).degrees,
+            Preferences.getDouble("Angle Offset 0",-51.0).degrees,
             CANCoders.CANCODER_FRONTLEFT,
             odometer0Entry,
             0
@@ -86,7 +86,7 @@ object Drive : Subsystem("Drive"), SwerveDrive {
             MotorController(FalconID(Falcons.DRIVE_FRONTRIGHT)),
             MotorController(FalconID(Falcons.STEER_FRONTRIGHT)),
             Vector2(11.5, 14.0),
-            Preferences.getDouble("Angle Offset 1",0.0).degrees,
+            Preferences.getDouble("Angle Offset 1",-306.0).degrees,
             CANCoders.CANCODER_FRONTRIGHT,
             odometer1Entry,
             1
@@ -95,7 +95,7 @@ object Drive : Subsystem("Drive"), SwerveDrive {
             MotorController(FalconID(Falcons.DRIVE_REARRIGHT)),
             MotorController(FalconID(Falcons.STEER_REARRIGHT)),
             Vector2(11.5, -14.0),
-            Preferences.getDouble("Angle Offset 2",0.0).degrees,
+            Preferences.getDouble("Angle Offset 2",-19.0).degrees,
             CANCoders.CANCODER_REARRIGHT,
             odometer2Entry,
             2
@@ -104,7 +104,7 @@ object Drive : Subsystem("Drive"), SwerveDrive {
             MotorController(FalconID(Falcons.DRIVE_REARLEFT)),
             MotorController(FalconID(Falcons.STEER_REARLEFT)),
             Vector2(-11.5, -14.0),
-            Preferences.getDouble("Angle Offset 3",0.0).degrees,
+            Preferences.getDouble("Angle Offset 3",-246.0).degrees,
             CANCoders.CANCODER_REARLEFT,
             odometer3Entry,
             3
@@ -275,8 +275,6 @@ object Drive : Subsystem("Drive"), SwerveDrive {
 //               println("XPos: ${position.x.feet} yPos: ${position.y.feet}")
 //                val currRobotPose = fieldObject.robotPose
 
-
-
                 val currRadius = position.length
                 val currAngle = position.angle.radians
                 radialVelocityEntry.setDouble(radialVelocity)
@@ -383,12 +381,14 @@ object Drive : Subsystem("Drive"), SwerveDrive {
                 turn = OI.driveRotation
             }
 
+            var speedFactor = linearMap(Pose.DRIVE_POSE.elevatorHeight.asInches, Armavator.ELEVATOR_MAX.asInches, 1.0, 0.4, Armavator.elevatorHeight.asInches).coerceIn(0.4, 1.0)
+
             printEncoderValues()
 
             headingSetpoint = OI.driverController.povDirection
 
             drive(
-                OI.driveTranslation,
+                OI.driveTranslation * speedFactor,
                 turn,
                 SmartDashboard.getBoolean("Use Gyro", true) && !DriverStation.isAutonomous(),
                 false

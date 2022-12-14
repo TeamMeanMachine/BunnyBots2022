@@ -3,10 +3,13 @@
 package org.team2471.bunnybots2022
 
 import BunnyBots____.BuildConfig
+import edu.wpi.first.cameraserver.CameraServer
+import edu.wpi.first.cscore.UsbCamera
 import edu.wpi.first.wpilibj.RobotBase
 import kotlinx.coroutines.DelicateCoroutinesApi
 import org.team2471.frc.lib.framework.MeanlibRobot
 import org.team2471.bunnybots2022.testing.*
+import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.motion.following.zeroEncoders
 import java.net.NetworkInterface
 
@@ -37,13 +40,15 @@ object Robot : MeanlibRobot() {
         repeat(25) {
             println("RANDOM NUMBER: ${Math.random()}")
         }
+        val camera = CameraServer.startAutomaticCapture()
+        camera.setResolution(160, 120);
         println("TAKE ME HOOOOOME COUNTRY ROOOOOOOOADS TOOO THE PLAAAAAAACE WHERE I BELOOOOOOOOONG")
         println(BuildConfig.BUILD_TIME)
 //        Drive.zeroGyro()
 //        Drive.heading = 0.0.degrees
         AutoChooser
         Armavator
-        Bunny
+//        Bunny
         DepthCharge
         Drive
     }
@@ -52,7 +57,7 @@ object Robot : MeanlibRobot() {
         println("starting enable")
         Drive.enable()
         Armavator.enable()
-        Bunny.enable()
+//        Bunny.enable()
         DepthCharge.enable()
         println("ending enable")
     }
@@ -77,7 +82,9 @@ object Robot : MeanlibRobot() {
 
     override suspend fun test()  {
         println("test mode begin. Hi.")
-        scoreCharge()
+//        scoreCharge()
+//        Drive.setAngleOffsets()
+        //Drive.steeringTests()
     }
 
 
@@ -86,7 +93,7 @@ object Robot : MeanlibRobot() {
     override suspend fun disable() {
         Drive.disable()
         Armavator.disable()
-        Bunny.disable()
+//        Bunny.disable()
         DepthCharge.disable()
         OI.operatorController.rumble = 0.0
 //        PowerDistribution.disable()

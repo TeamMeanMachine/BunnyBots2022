@@ -3,9 +3,6 @@
 package org.team2471.bunnybots2022
 
 object Talons {
-    const val INTAKE_PIVOT = 89
-    const val BUNNY_LIFT = 51
-
     const val INTAKE_SPIT = 10
     const val INTAKE_SUCK = 8
 
@@ -13,12 +10,13 @@ object Talons {
 
 
 object Sparks {
-
+//    const val BUNNY_EXTEND = 10
 
 }
 
 object AnalogSensors {
-    const val ARM_ANGLE = 0
+    const val BUNNY_EXTEND = 0
+//    const val ARM_ANGLE = 0
 }
 
 object DigitalSensors {
@@ -27,7 +25,8 @@ object DigitalSensors {
 }
 
 object PWMServos {
-    const val BUNNY_PINCH = 3
+//    const val BUNNY_PINCH_LEFT = 3
+//    const val BUNNY_PINCH_RIGHT = 4
     const val DEPTH_ONE = 1
     const val DEPTH_TWO = 2
     const val INTAKE_PIVOT = 0
@@ -41,7 +40,7 @@ object Falcons {
     const val STEER_FRONTRIGHT = 3
     const val DRIVE_REARRIGHT = 0
     const val STEER_REARRIGHT = 1
-    const val DRIVE_REARLEFT= 14
+    const val DRIVE_REARLEFT = 14
     const val STEER_REARLEFT = 9
 
     const val ARM = 6

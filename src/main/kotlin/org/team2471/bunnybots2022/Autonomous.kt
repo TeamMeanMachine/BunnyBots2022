@@ -5,6 +5,7 @@ import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
+import org.team2471.frc.lib.coroutines.delay
 import org.team2471.frc.lib.coroutines.parallel
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.framework.use
@@ -60,6 +61,7 @@ object AutoChooser {
         addOption("4 Foot Circle", "4 Foot Circle")
         addOption("8 Foot Circle", "8 Foot Circle")
         addOption("Hook Path", "Hook Path")
+        addOption("Right Complex", "Right Complex")
         setDefaultOption("90 Degree Turn", "90 Degree Turn")
 
 
@@ -68,6 +70,7 @@ object AutoChooser {
     private val autonomousChooser = SendableChooser<String?>().apply {
         setDefaultOption("Tests", "testAuto")
         addOption("Rotary", "rotaryAuto")
+        addOption("Right Simple", "rightSimple")
 
 
     }
@@ -126,6 +129,8 @@ object AutoChooser {
         when (selAuto) {
             "Tests" -> testAuto()
             "Carpet Bias Test" -> carpetBiasTest()
+            "Right Simple" -> rightSimple()
+
             "April Test Auto" -> aprilTestAuto()
             else -> println("No function found for ---->$selAuto<-----  ${Robot.recentTimeTaken()}")
         }
@@ -158,6 +163,33 @@ object AutoChooser {
             //path = auto["05- Backward"]
         }
     }
+    suspend fun RightComplex() = use(Drive, Armavator, DepthCharge) {
+        val auto = autonomi["Bunny Bot Right"]
+        if(auto != null) {
+            Armavator.goToDrivePose()
+          //  var path = auto["1 - Grab Bunny"]
+          //  Drive.driveAlongPath(path, false)
+            //pick up bunny
+            var path = auto["1 - Forward"]
+            Drive.driveAlongPath(path, false)
+            //april tag line up
+            path = auto["2 - Bumper to Bin"]
+            Drive.driveAlongPath(path, false)
+            parallel({
+                Armavator.goToOverBinPose()
+                Armavator.suckMotor.setPercentOutput(-1.0)
+                delay(1.0)
+                Armavator.suckMotor.setPercentOutput(0.0)
+                //eject tube
+            }, {
+                DepthCharge.score(false)
+            })
+            Armavator.goToDrivePose()
+            path = auto["3 - Bin Backup"]
+            Drive.driveAlongPath(path, false)
+            DepthCharge.score(true)
+        }
+    }
 
     suspend fun test8FtStraight() = use(Drive) {
         val auto = autonomi["Tests"]
@@ -182,6 +214,43 @@ object AutoChooser {
             Drive.driveAlongPath(auto["90 Degree Turn"], true, 2.0)
         }
     }
+    suspend fun bunnyAutoOne() = use(Drive){
+        val auto = autonomi["Tests"]
+        if (auto != null){
+            Drive.driveAlongPath(auto[""], true, 2.0)
+        }
+    }
+
+    suspend fun rightSimple() = use (Drive, Armavator, DepthCharge) {
+        val auto = autonomi["Bunny Bot Simple"]
+        if(auto != null) {
+            Armavator.suckMotor.setPercentOutput(1.0)
+            var path = auto["1 - Forward"]
+            parallel ({
+                Drive.driveAlongPath(path, true, 0.0, true)
+            }, {
+                Armavator.goToGroundPose()
+            })
+            Armavator.suckMotor.setPercentOutput(0.0)
+//            path = auto["2 - Forward Again"]
+//            Drive.driveAlongPath(path, resetOdometry = false)
+            parallel({
+                Armavator.goToOverBinPose()
+                Armavator.suckMotor.setPercentOutput(-1.0)
+                Armavator.spitMotor.setPercentOutput(-1.0)
+                delay(1.0)
+                Armavator.suckMotor.setPercentOutput(0.0)
+                Armavator.spitMotor.setPercentOutput(0.0)
+            }, {
+                DepthCharge.score(false)
+            })
+            Armavator.goToDrivePose()
+            path = auto["3 - Bin Backup"]
+            Drive.driveAlongPath(path, false)
+            DepthCharge.score(true)
+        }
+    }
+
 
     suspend fun aprilTestAuto() = use(Drive) {
         println("In aprilTest auto.")
