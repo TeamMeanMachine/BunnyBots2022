@@ -5,10 +5,14 @@ import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
+import org.team2471.frc.lib.coroutines.parallel
+import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.framework.use
+import org.team2471.frc.lib.math.Vector2
 import org.team2471.frc.lib.motion.following.driveAlongPath
 import org.team2471.frc.lib.motion_profiling.Autonomi
 import org.team2471.frc.lib.util.measureTimeFPGA
+import org.team2471.frc2022.AprilTag
 import java.io.File
 
 private lateinit var autonomi: Autonomi
@@ -47,6 +51,7 @@ object AutoChooser {
         addOption("None", null)
         addOption("20 Foot Test", "20 Foot Test")
         addOption("8 Foot Straight", "8 Foot Straight")
+        addOption("April Test Auto", "April Test Auto")
 
 //        addOption("8 Foot Straight Downfield", "8 Foot Straight Downfield")
 //        addOption("8 Foot Straight Upfield", "8 Foot Straight Upfield")
@@ -121,6 +126,7 @@ object AutoChooser {
         when (selAuto) {
             "Tests" -> testAuto()
             "Carpet Bias Test" -> carpetBiasTest()
+            "April Test Auto" -> aprilTestAuto()
             else -> println("No function found for ---->$selAuto<-----  ${Robot.recentTimeTaken()}")
         }
         SmartDashboard.putString("autoStatus", "complete")
@@ -174,6 +180,33 @@ object AutoChooser {
         val auto = autonomi["Tests"]
         if (auto != null) {
             Drive.driveAlongPath(auto["90 Degree Turn"], true, 2.0)
+        }
+    }
+
+    suspend fun aprilTestAuto() = use(Drive) {
+        println("In aprilTest auto.")
+        val auto = autonomi["April Test Auto"]
+        if (auto != null) {
+            var pathDone = false
+            parallel({
+                Drive.driveAlongPath(auto["Back Wall To Table"], true, 0.0, true)
+                println("Done Driving")
+                pathDone = true
+            }, {
+                periodic {
+                    //println("Gone to periodic")
+                    AprilTag.resetLastResult()
+                    if (AprilTag.validTarget) {
+                        Drive.position = Vector2(Drive.position.x + AprilTag.xOffset, Drive.position.y)
+                        //println("Modified X offset: ${AprilTag.xOffset} Drive.position.x: ${Drive.position.x}")
+                    }
+
+
+                    if (pathDone) {
+                        this.stop()
+                    }
+                }
+            })
         }
     }
 }

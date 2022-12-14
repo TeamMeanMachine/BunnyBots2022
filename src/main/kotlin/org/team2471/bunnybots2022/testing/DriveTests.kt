@@ -126,7 +126,7 @@ suspend fun Drive.driveCircle() = use(Drive) {
 
         circlePosition = Vector2(goalRadius * goalAngle.sin(), goalRadius * goalAngle.cos())
         val positionSetPoint = circlePosition
-        println("dt=$dt  x = ${positionSetPoint.x} y = ${positionSetPoint.y}")
+        //println("dt=$dt  x = ${positionSetPoint.x} y = ${positionSetPoint.y}")
 
         // position error
         val positionError = positionSetPoint - position
