@@ -224,30 +224,41 @@ object AutoChooser {
     suspend fun rightSimple() = use (Drive, Armavator, DepthCharge) {
         val auto = autonomi["Bunny Bot Simple"]
         if(auto != null) {
-            Armavator.suckMotor.setPercentOutput(1.0)
             var path = auto["1 - Forward"]
             parallel ({
                 Drive.driveAlongPath(path, true, 0.0, true)
             }, {
-                Armavator.goToGroundPose()
+                Armavator.startToGroundPose()
+                delay(0.3)
+                Armavator.goToPose(Pose.OVER_BIN_POSE3)
+                Armavator.suckMotor.setPercentOutput(0.0)
+            }, {
+                Armavator.suckMotor.setPercentOutput(1.0)
             })
-            Armavator.suckMotor.setPercentOutput(0.0)
+
 //            path = auto["2 - Forward Again"]
 //            Drive.driveAlongPath(path, resetOdometry = false)
             parallel({
-                Armavator.goToOverBinPose()
+//                Armavator.intakePivotMotor.set(0.0) no longer works
+                Armavator.goToPose(Pose.OVER_BIN_POSE4)
                 Armavator.suckMotor.setPercentOutput(-1.0)
                 Armavator.spitMotor.setPercentOutput(-1.0)
-                delay(1.0)
+                delay(0.3)
+                Armavator.goToPose(Pose.OVER_BIN_POSE3)
+            }, {
+                DepthCharge.score(true)
+            })
+            parallel({
+                Armavator.goToDrivePose()
+            }, {
+                path = auto["2 - Bin Backup"]
+                Drive.driveAlongPath(path, false)
+            }, {
                 Armavator.suckMotor.setPercentOutput(0.0)
                 Armavator.spitMotor.setPercentOutput(0.0)
-            }, {
+                delay(path.duration * 0.5)
                 DepthCharge.score(false)
             })
-            Armavator.goToDrivePose()
-            path = auto["3 - Bin Backup"]
-            Drive.driveAlongPath(path, false)
-            DepthCharge.score(true)
         }
     }
 

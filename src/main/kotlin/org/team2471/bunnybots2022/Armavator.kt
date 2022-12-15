@@ -330,6 +330,10 @@ object Armavator : Subsystem("Armavator") {
             }
         }
     }
+    suspend fun startToGroundPose() = use(Armavator) {
+        goToPose(Pose.START2_GROUND_POSE)
+        goToPose(Pose.GROUND_POSE2)
+    }
 
     fun isPose(pose: Pose, eDiff: Double = 2.0, aDiff: Double = 2.0) : Boolean {
         return (elevatorHeight - pose.elevatorHeight).asInches.absoluteValue < eDiff && (armAngle - pose.armAngle).asDegrees.absoluteValue < aDiff
