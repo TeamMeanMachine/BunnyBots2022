@@ -80,25 +80,26 @@ object AprilTag : Subsystem("AprilTag") {
                 resetLastResult()
             }
             var result = camera.latestResult
-            val time = Timer.getFPGATimestamp()
-            val latencyPose = Drive.lookupPose(time - result.latencyMillis)
-            val positionDiff = Drive.pose.position - latencyPose.position
-            val headingDiff = Drive.pose.heading - latencyPose.heading
+ //           val time = Timer.getFPGATimestamp()
+//            val latencyPose = Drive.lookupPose(time - result.latencyMillis)
+//            val positionDiff = Drive.pose.position - latencyPose.position
+//            val headingDiff = Drive.pose.heading - latencyPose.heading
 
             val hasTargets: Boolean = result.hasTargets()
 
 
             // println("Current Time: ${result.timestampSeconds} last time: $last_result_time")
             if (result.timestampSeconds <= last_result_time + 0.5) {
-                // println("${hasTargets}")
+//                println("${hasTargets}")
                 if (hasTargets) {
 
                     last_result_time = result.timestampSeconds
-                    val targets: List<PhotonTrackedTarget> = result.getTargets().filter {it.fiducialId == tagId && it.poseAmbiguity < 0.2}
+                    val targets: List<PhotonTrackedTarget> = result.getTargets().filter {it.fiducialId == tagId && it.poseAmbiguity <= 0.4}
                     for (target in targets){
                         //println(target.fiducialId)
                         validTarget = true
                         xOffset = target.bestCameraToTarget.y/ tda
+//                        println("XOffset: $xOffset")
                     }
                 }
                 //println(targets)

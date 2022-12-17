@@ -11,6 +11,7 @@ import org.team2471.frc.lib.framework.MeanlibRobot
 import org.team2471.bunnybots2022.testing.*
 import org.team2471.frc.lib.coroutines.periodic
 import org.team2471.frc.lib.motion.following.zeroEncoders
+import org.team2471.frc2022.AprilTag
 import java.net.NetworkInterface
 
 var isCompBot = true
@@ -51,6 +52,7 @@ object Robot : MeanlibRobot() {
 //        Bunny
         DepthCharge
         Drive
+        AprilTag
     }
 
     override suspend fun enable() {
@@ -59,6 +61,7 @@ object Robot : MeanlibRobot() {
         Armavator.enable()
 //        Bunny.enable()
         DepthCharge.enable()
+        AprilTag.enable()
         println("ending enable")
     }
 

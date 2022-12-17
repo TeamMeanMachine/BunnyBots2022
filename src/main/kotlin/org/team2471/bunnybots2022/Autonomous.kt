@@ -70,7 +70,10 @@ object AutoChooser {
     private val autonomousChooser = SendableChooser<String?>().apply {
         setDefaultOption("Tests", "testAuto")
         addOption("Rotary", "rotaryAuto")
-        addOption("Right Simple", "rightSimple")
+        addOption("Straight Auto", "Straight Auto")
+        addOption("aprilTestAuto", "aprilTestAuto")
+        addOption("rightAuto", "rightAuto")
+
 
 
     }
@@ -129,9 +132,9 @@ object AutoChooser {
         when (selAuto) {
             "Tests" -> testAuto()
             "Carpet Bias Test" -> carpetBiasTest()
-            "Right Simple" -> rightSimple()
-
-            "April Test Auto" -> aprilTestAuto()
+            "Straight Auto" -> straightAuto()
+            "rightAuto" -> rightAuto()
+            "aprilTestAuto" -> aprilTestAuto()
             else -> println("No function found for ---->$selAuto<-----  ${Robot.recentTimeTaken()}")
         }
         SmartDashboard.putString("autoStatus", "complete")
@@ -221,12 +224,14 @@ object AutoChooser {
         }
     }
 
-    suspend fun rightSimple() = use (Drive, Armavator, DepthCharge) {
+    suspend fun straightAuto() = use (Drive, Armavator, DepthCharge) {
         val auto = autonomi["Bunny Bot Simple"]
         if(auto != null) {
+            var pathDone = false
             var path = auto["1 - Forward"]
             parallel ({
                 Drive.driveAlongPath(path, true, 0.0, true)
+                pathDone = true
             }, {
                 Armavator.startToGroundPose()
                 delay(0.3)
@@ -234,6 +239,20 @@ object AutoChooser {
                 Armavator.suckMotor.setPercentOutput(0.0)
             }, {
                 Armavator.suckMotor.setPercentOutput(1.0)
+            }, {
+                periodic {
+//                    println("Gone to periodic + ${AprilTag.validTarget}")
+                    AprilTag.resetLastResult()
+                    if (AprilTag.validTarget) {
+                        Drive.position = Vector2(Drive.position.x + AprilTag.xOffset, Drive.position.y)
+                        println("Modified X offset: ${AprilTag.xOffset} Drive.position.x: ${Drive.position.x}")
+                    }
+
+
+                    if (pathDone) {
+                        this.stop()
+                    }
+                }
             })
 
 //            path = auto["2 - Forward Again"]
@@ -246,12 +265,49 @@ object AutoChooser {
                 delay(0.3)
                 Armavator.goToPose(Pose.OVER_BIN_POSE3)
             }, {
-                DepthCharge.score(true)
+                DepthCharge.score(false)
             })
             parallel({
                 Armavator.goToDrivePose()
             }, {
                 path = auto["2 - Bin Backup"]
+                Drive.driveAlongPath(path, false)
+            }, {
+                Armavator.suckMotor.setPercentOutput(0.0)
+                Armavator.spitMotor.setPercentOutput(0.0)
+                delay(path.duration * 0.5)
+                DepthCharge.score(true)
+            })
+        }
+    }
+
+    suspend fun rightAuto() = use (Drive, Armavator, DepthCharge) {
+        val auto = autonomi["Right Auto"]
+        if(auto != null) {
+            var path = auto["1 - Straight To Bin"]
+            parallel ({
+                Drive.driveAlongPath(path, true, 0.0, true)
+            }, {
+                Armavator.startToGroundPose()
+                delay(0.3)
+                Armavator.goToPose(Pose.OVER_BIN_POSE3)
+                Armavator.suckMotor.setPercentOutput(0.0)
+            }, {
+                Armavator.suckMotor.setPercentOutput(1.0)
+            })
+            parallel({
+                Armavator.goToPose(Pose.OVER_BIN_POSE4)
+                Armavator.suckMotor.setPercentOutput(-1.0)
+                Armavator.spitMotor.setPercentOutput(-1.0)
+                delay(0.3)
+                Armavator.goToPose(Pose.OVER_BIN_POSE3)
+            }, {
+                DepthCharge.score(true)
+            })
+            parallel({
+                Armavator.goToDrivePose()
+            }, {
+                path = auto["2 - Get Close to Bin"]
                 Drive.driveAlongPath(path, false)
             }, {
                 Armavator.suckMotor.setPercentOutput(0.0)
@@ -264,21 +320,21 @@ object AutoChooser {
 
 
     suspend fun aprilTestAuto() = use(Drive) {
-        println("In aprilTest auto.")
-        val auto = autonomi["April Test Auto"]
-        if (auto != null) {
+        val auto = autonomi["Bunny Bot Simple"]
+        if(auto != null) {
+            var path = auto["1 - Forward"]
             var pathDone = false
             parallel({
-                Drive.driveAlongPath(auto["Back Wall To Table"], true, 0.0, true)
+                Drive.driveAlongPath(path, true, 0.0, true)
                 println("Done Driving")
                 pathDone = true
             }, {
                 periodic {
-                    //println("Gone to periodic")
+//                    println("Gone to periodic + ${AprilTag.validTarget}")
                     AprilTag.resetLastResult()
                     if (AprilTag.validTarget) {
                         Drive.position = Vector2(Drive.position.x + AprilTag.xOffset, Drive.position.y)
-                        //println("Modified X offset: ${AprilTag.xOffset} Drive.position.x: ${Drive.position.x}")
+                        println("Modified X offset: ${AprilTag.xOffset} Drive.position.x: ${Drive.position.x}")
                     }
 
 

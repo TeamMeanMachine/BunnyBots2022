@@ -1,14 +1,19 @@
 {
 	"drivetrainParameters": {
-		"drivetrain": "swerve",
-		"gyroRateCorrection": 0.0,
-		"kpPosition": 0.0,
-		"kdPosition": 0.0,
-		"kPositionFeedForward": 0.0,
-		"kpHeading": 0.0,
-		"kdHeading": 0.0,
-		"kHeadingFeedForward": 0.0,
-		"alignRobotToPath": false
+		"drivetrain": "arcade",
+		"trackWidth": 2.0833333333333335,
+		"scrubFactor": 1.12,
+		"leftFeedForwardCoefficient": 0.070541988198899,
+		"leftFeedForwardOffset": 0.021428882425651,
+		"rightFeedForwardCoefficient": 0.071704891069425,
+		"rightFeedForwardOffset": 0.020459379452296,
+		"driveTurningP": 0.0,
+		"headingFeedForward": 0.0,
+		"doHeadingCorrection": false,
+		"headingCorrectionP": 0.0,
+		"headingCorrectionI": 0.0,
+		"headingCorrectionIDecay": 1.0,
+		"alignRobotToPath": true
 	},
 	"mapAutonomous": {
 		"Tests": {
