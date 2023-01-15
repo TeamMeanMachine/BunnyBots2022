@@ -18,12 +18,14 @@ import org.team2471.frc.lib.control.PDConstantFController
 import org.team2471.frc.lib.control.PDController
 import org.team2471.frc.lib.coroutines.*
 import org.team2471.frc.lib.framework.Subsystem
+import org.team2471.frc.lib.framework.use
 import org.team2471.frc.lib.math.Vector2
 import org.team2471.frc.lib.math.linearMap
 import org.team2471.frc.lib.motion.following.*
 import org.team2471.frc.lib.motion_profiling.MotionCurve
 import org.team2471.frc.lib.motion_profiling.following.SwerveParameters
 import org.team2471.frc.lib.units.*
+import org.team2471.frc2022.AprilTag
 import kotlin.math.absoluteValue
 import kotlin.math.cos
 import kotlin.math.sin
@@ -268,10 +270,10 @@ object Drive : Subsystem("Drive"), SwerveDrive {
                 xEntry.setDouble(x)
                 yEntry.setDouble(y)
                 headingEntry.setDouble(heading.asDegrees)
-                absoluteAngle0Entry.setDouble((modules[0] as Module).absoluteAngle.asDegrees)
-                absoluteAngle1Entry.setDouble((modules[1] as Module).absoluteAngle.asDegrees)
-                absoluteAngle2Entry.setDouble((modules[2] as Module).absoluteAngle.asDegrees)
-                absoluteAngle3Entry.setDouble((modules[3] as Module).absoluteAngle.asDegrees)
+                absoluteAngle0Entry.setDouble((modules[0] as Module).absoluteAngle)
+                absoluteAngle1Entry.setDouble((modules[1] as Module).absoluteAngle)
+                absoluteAngle2Entry.setDouble((modules[2] as Module).absoluteAngle)
+                absoluteAngle3Entry.setDouble((modules[3] as Module).absoluteAngle)
 //               println("XPos: ${position.x.feet} yPos: ${position.y.feet}")
 //                val currRobotPose = fieldObject.robotPose
 
@@ -381,15 +383,12 @@ object Drive : Subsystem("Drive"), SwerveDrive {
                 turn = OI.driveRotation
             }
 
-            var speedFactor = linearMap(Pose.DRIVE_POSE.elevatorHeight.asInches, Armavator.ELEVATOR_MAX.asInches, 0.6, 0.2, Armavator.elevatorHeight.asInches).coerceIn(0.2, 0.6)
-
             printEncoderValues()
 
             headingSetpoint = OI.driverController.povDirection
-
             drive(
-                OI.driveTranslation * speedFactor,
-                turn * speedFactor,
+                OI.driveTranslation,
+                turn,
                 SmartDashboard.getBoolean("Use Gyro", true) && !DriverStation.isAutonomous(),
                 false
             )
@@ -478,9 +477,9 @@ object Drive : Subsystem("Drive"), SwerveDrive {
 
         val canCoder : CANCoder = CANCoder(canCoderID)
 
-        val absoluteAngle: Angle
+        val absoluteAngle: Double
             get() {
-                return (-canCoder.absolutePosition.degrees - angleOffset).wrap()
+                return (-canCoder.absolutePosition.degrees - angleOffset).wrap().asDegrees
             }
 
         override val treadWear: Double
@@ -598,6 +597,17 @@ object Drive : Subsystem("Drive"), SwerveDrive {
             val module = (element as Module)
             module.setAngleOffset()
         }
+    }
+
+    suspend fun rampTest() = use(Drive) {
+        periodic {
+            drive(Vector2(0.0, 0.1), 0.0)
+            if (gyro.getRoll() > 4.0) {
+                this.stop()
+            }
+        }
+        drive(Vector2(0.0, 0.0), 0.0)
+
     }
 }
 

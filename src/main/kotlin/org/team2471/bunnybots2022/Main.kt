@@ -6,6 +6,7 @@ import BunnyBots____.BuildConfig
 import edu.wpi.first.cameraserver.CameraServer
 import edu.wpi.first.cscore.UsbCamera
 import edu.wpi.first.wpilibj.RobotBase
+import jdk.incubator.vector.VectorOperators.Test
 import kotlinx.coroutines.DelicateCoroutinesApi
 import org.team2471.frc.lib.framework.MeanlibRobot
 import org.team2471.bunnybots2022.testing.*
@@ -41,16 +42,13 @@ object Robot : MeanlibRobot() {
         repeat(25) {
             println("RANDOM NUMBER: ${Math.random()}")
         }
-        val camera = CameraServer.startAutomaticCapture()
-        camera.setResolution(160, 120);
+//        val camera = CameraServer.startAutomaticCapture()
+//        camera.setResolution(160, 120);
         println("TAKE ME HOOOOOME COUNTRY ROOOOOOOOADS TOOO THE PLAAAAAAACE WHERE I BELOOOOOOOOONG")
         println(BuildConfig.BUILD_TIME)
 //        Drive.zeroGyro()
 //        Drive.heading = 0.0.degrees
         AutoChooser
-        Armavator
-//        Bunny
-        DepthCharge
         Drive
         AprilTag
     }
@@ -58,9 +56,6 @@ object Robot : MeanlibRobot() {
     override suspend fun enable() {
         println("starting enable")
         Drive.enable()
-        Armavator.enable()
-//        Bunny.enable()
-        DepthCharge.enable()
         AprilTag.enable()
         println("ending enable")
     }
@@ -74,7 +69,6 @@ object Robot : MeanlibRobot() {
         println("autonomous Drive brakeMode ${totalTimeTaken()}")
         AutoChooser.autonomous()
         println("autonomous ending ${totalTimeTaken()}")
-
     }
 
     override suspend fun teleop() {
@@ -88,6 +82,7 @@ object Robot : MeanlibRobot() {
 //        scoreCharge()
 //        Drive.setAngleOffsets()
         //Drive.steeringTests()
+        Drive.rampTest()
     }
 
 
@@ -95,9 +90,6 @@ object Robot : MeanlibRobot() {
 
     override suspend fun disable() {
         Drive.disable()
-        Armavator.disable()
-//        Bunny.disable()
-        DepthCharge.disable()
         OI.operatorController.rumble = 0.0
 //        PowerDistribution.disable()
         //FrontLimelight.disable()

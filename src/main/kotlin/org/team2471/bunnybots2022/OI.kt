@@ -13,6 +13,9 @@ object OI {
     private val deadBandDriver = 0.1
     private val deadBandOperator = 0.1
 
+    private val driverDpadUp: Boolean
+        get() = driverController.dPad == Controller.Direction.UP
+
 
     private val driveTranslationX: Double
         get() = driverController.leftThumbstickX.deadband(deadBandDriver).squareWithSign()
@@ -54,24 +57,6 @@ object OI {
         driverController::back.whenTrue { Drive.zeroGyro(); Drive.initializeSteeringMotors() }
 
 
-        operatorController::b.whenTrue {
-            Armavator.goToDrivePose()
-        }
-        operatorController::y.whenTrue {
-            Armavator.goToOverBinPose()
-        }
-        operatorController::a.whenTrue {
-            Armavator.goToGroundPose()
-        }
-        operatorController::x.whenTrue {
-            Armavator.goToUnderBinPose()
-        }
-        operatorController::start.whenTrue {
-            Armavator.goToStartPose()
-        }
-        driverController::start.whenTrue {
-            Armavator.resetOffset()
-        }
         // driverController::y.whenTrue { goToPose(Pose.N_Pos)}
 
         // driverController::b.whenTrue { goToPose(Pose.START_POS)}

@@ -75,6 +75,7 @@ object AutoChooser {
         addOption("aprilTestAuto", "aprilTestAuto")
         addOption("rightAuto", "rightAuto")
         addOption("rightBlueAuto", "rightBlueAuto")
+        addOption("2023Test", "2023Test")
 
 
 
@@ -134,11 +135,8 @@ object AutoChooser {
         when (selAuto) {
             "Tests" -> testAuto()
             "Carpet Bias Test" -> carpetBiasTest()
-            "Straight Auto" -> straightAuto()
-            "Straight Blue Auto" -> straightBlueAuto()
-            "rightAuto" -> rightAuto()
-            "rightBlueAuto" -> rightBlueAuto()
             "aprilTestAuto" -> aprilTestAuto()
+            "2023Test" -> test2023()
             else -> println("No function found for ---->$selAuto<-----  ${Robot.recentTimeTaken()}")
         }
         SmartDashboard.putString("autoStatus", "complete")
@@ -170,33 +168,7 @@ object AutoChooser {
             //path = auto["05- Backward"]
         }
     }
-    suspend fun RightComplex() = use(Drive, Armavator, DepthCharge) {
-        val auto = autonomi["Bunny Bot Right"]
-        if(auto != null) {
-            Armavator.goToDrivePose()
-          //  var path = auto["1 - Grab Bunny"]
-          //  Drive.driveAlongPath(path, false)
-            //pick up bunny
-            var path = auto["1 - Forward"]
-            Drive.driveAlongPath(path, false)
-            //april tag line up
-            path = auto["2 - Bumper to Bin"]
-            Drive.driveAlongPath(path, false)
-            parallel({
-                Armavator.goToOverBinPose()
-                Armavator.suckMotor.setPercentOutput(-1.0)
-                delay(1.0)
-                Armavator.suckMotor.setPercentOutput(0.0)
-                //eject tube
-            }, {
-                DepthCharge.score(false)
-            })
-            Armavator.goToDrivePose()
-            path = auto["3 - Bin Backup"]
-            Drive.driveAlongPath(path, false)
-            DepthCharge.score(true)
-        }
-    }
+
 
     suspend fun test8FtStraight() = use(Drive) {
         val auto = autonomi["Tests"]
@@ -228,195 +200,19 @@ object AutoChooser {
         }
     }
 
-    suspend fun straightAuto() = use (Drive, Armavator, DepthCharge) {
-        val auto = autonomi["Bunny Bot Simple"]
-        if(auto != null) {
-            var pathDone = false
-            var path = auto["1 - Forward"]
-            parallel ({
-                Drive.driveAlongPath(path, true, 0.0, true)
-                pathDone = true
-            }, {
-                Armavator.startToGroundPose()
-                delay(0.3)
-                Armavator.goToPose(Pose.OVER_BIN_POSE3)
-                Armavator.suckMotor.setPercentOutput(0.0)
-            }, {
-                Armavator.suckMotor.setPercentOutput(1.0)
-            }, {
-                periodic {
-//                    println("Gone to periodic + ${AprilTag.validTarget}")
-                    AprilTag.resetLastResult()
-                    if (AprilTag.validTarget) {
-                        Drive.position = Vector2(Drive.position.x + AprilTag.xOffset, Drive.position.y)
-                        println("Modified X offset: ${AprilTag.xOffset} Drive.position.x: ${Drive.position.x}")
-                    }
-
-
-                    if (pathDone) {
-                        this.stop()
-                    }
-                }
-            })
-
-//            path = auto["2 - Forward Again"]
-//            Drive.driveAlongPath(path, resetOdometry = false)
-            parallel({
-//                Armavator.intakePivotMotor.set(0.0) no longer works
-                Armavator.goToPose(Pose.OVER_BIN_POSE4)
-                Armavator.suckMotor.setPercentOutput(-1.0)
-                Armavator.spitMotor.setPercentOutput(-1.0)
-                delay(0.25)
-                Armavator.goToPose(Pose.OVER_BIN_POSE3)
-            }, {
-                DepthCharge.score(false)
-            })
-            parallel({
-                Armavator.goToDrivePose()
-            }, {
-                path = auto["2 - Bin Backup"]
-                Drive.driveAlongPath(path, false)
-            }, {
-                Armavator.suckMotor.setPercentOutput(0.0)
-                Armavator.spitMotor.setPercentOutput(0.0)
-                delay(path.duration * 0.5)
-                DepthCharge.score(true)
-            })
+    suspend fun test2023() = use(Drive) {
+        val auto = autonomi["2023Test"]
+        if (auto != null) {
+            var path = auto["StraightOut"]
+            Drive.driveAlongPath(path, true, 0.0, true)
+            path = auto["StraightBack"]
+            Drive.driveAlongPath(path, false)
+            path = auto["StraightOut"]
+            Drive.driveAlongPath(path, true)
+            path = auto["StraightBack"]
+            Drive.driveAlongPath(path, false)
         }
     }
-
-    suspend fun straightBlueAuto() = use (Drive, Armavator, DepthCharge) {
-        val auto = autonomi["Bunny Bot Blue Simple"]
-        if(auto != null) {
-            var pathDone = false
-            var path = auto["1 - Forward"]
-            parallel ({
-                Drive.driveAlongPath(path, true, 0.0, true)
-                pathDone = true
-            }, {
-                Armavator.startToGroundPose()
-                delay(0.3)
-                Armavator.goToPose(Pose.OVER_BIN_POSE3)
-                Armavator.suckMotor.setPercentOutput(0.0)
-            }, {
-                Armavator.suckMotor.setPercentOutput(1.0)
-            }, {
-                periodic {
-//                    println("Gone to periodic + ${AprilTag.validTarget}")
-                    AprilTag.resetLastResult()
-                    if (AprilTag.validTarget) {
-                        Drive.position = Vector2(Drive.position.x + AprilTag.xOffset, Drive.position.y)
-                        println("Modified X offset: ${AprilTag.xOffset} Drive.position.x: ${Drive.position.x}")
-                    }
-
-
-                    if (pathDone) {
-                        this.stop()
-                    }
-                }
-            })
-
-//            path = auto["2 - Forward Again"]
-//            Drive.driveAlongPath(path, resetOdometry = false)
-            parallel({
-//                Armavator.intakePivotMotor.set(0.0) no longer works
-                Armavator.goToPose(Pose.OVER_BIN_POSE4)
-                Armavator.suckMotor.setPercentOutput(-1.0)
-                Armavator.spitMotor.setPercentOutput(-1.0)
-                delay(0.25)
-                Armavator.goToPose(Pose.OVER_BIN_POSE3)
-            }, {
-                DepthCharge.score(false)
-            })
-            parallel({
-                Armavator.goToDrivePose()
-            }, {
-                path = auto["2 - Bin Backup"]
-                Drive.driveAlongPath(path, false)
-            }, {
-                Armavator.suckMotor.setPercentOutput(0.0)
-                Armavator.spitMotor.setPercentOutput(0.0)
-                delay(path.duration * 0.5)
-                DepthCharge.score(true)
-            })
-        }
-    }
-
-    suspend fun rightAuto() = use (Drive, Armavator, DepthCharge) {
-        val auto = autonomi["Right Auto"]
-        if(auto != null) {
-            var path = auto["1 - Straight To Bin"]
-            parallel ({
-                Drive.driveAlongPath(path, true, 0.0, true)
-            }, {
-                Armavator.startToGroundPose()
-                delay(0.3)
-                Armavator.goToPose(Pose.OVER_BIN_POSE3)
-                Armavator.suckMotor.setPercentOutput(0.0)
-            }, {
-                Armavator.suckMotor.setPercentOutput(1.0)
-            })
-            parallel({
-                Armavator.goToPose(Pose.OVER_BIN_POSE4)
-                Armavator.suckMotor.setPercentOutput(-1.0)
-                Armavator.spitMotor.setPercentOutput(-1.0)
-                delay(0.25)
-                Armavator.goToPose(Pose.OVER_BIN_POSE3)
-            }, {
-                DepthCharge.score(true)
-            })
-            parallel({
-                Armavator.goToDrivePose()
-            }, {
-                path = auto["2 - Get Close to Bin"]
-                Drive.driveAlongPath(path, false)
-            }, {
-                Armavator.suckMotor.setPercentOutput(0.0)
-                Armavator.spitMotor.setPercentOutput(0.0)
-                delay(path.duration * 0.5)
-                DepthCharge.score(false)
-            })
-        }
-    }
-
-    suspend fun rightBlueAuto() = use (Drive, Armavator, DepthCharge) {
-        val auto = autonomi["Right Blue Auto"]
-        if(auto != null) {
-            var path = auto["1 - Straight To Bin"]
-            parallel ({
-                Drive.driveAlongPath(path, true, 0.0, true)
-            }, {
-                Armavator.startToGroundPose()
-                delay(0.3)
-                Armavator.goToPose(Pose.OVER_BIN_POSE3)
-                Armavator.suckMotor.setPercentOutput(0.0)
-            }, {
-                Armavator.suckMotor.setPercentOutput(1.0)
-            })
-            parallel({
-                Armavator.goToPose(Pose.OVER_BIN_POSE4)
-                Armavator.suckMotor.setPercentOutput(-1.0)
-                Armavator.spitMotor.setPercentOutput(-1.0)
-                delay(0.25)
-                Armavator.goToPose(Pose.OVER_BIN_POSE3)
-            }, {
-                DepthCharge.score(true)
-            })
-            parallel({
-                Armavator.goToDrivePose()
-            }, {
-                path = auto["2 - Get Close to Bin"]
-                Drive.driveAlongPath(path, false)
-            }, {
-                Armavator.suckMotor.setPercentOutput(0.0)
-                Armavator.spitMotor.setPercentOutput(0.0)
-                delay(path.duration * 0.5)
-                DepthCharge.score(false)
-            })
-        }
-    }
-
-
     suspend fun aprilTestAuto() = use(Drive) {
         val auto = autonomi["Bunny Bot Simple"]
         if(auto != null) {
