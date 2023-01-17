@@ -5,6 +5,7 @@ package org.team2471.bunnybots2022
 object Talons {
     const val INTAKE_SPIT = 10
     const val INTAKE_SUCK = 8
+    const val INTAKE_PIVOT = 11
 
 }
 
@@ -29,7 +30,6 @@ object PWMServos {
 //    const val BUNNY_PINCH_RIGHT = 4
     const val DEPTH_ONE = 1
     const val DEPTH_TWO = 2
-    const val INTAKE_PIVOT = 0
 }
 
 object Falcons {

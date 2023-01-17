@@ -28,7 +28,7 @@ object Armavator : Subsystem("Armavator") {
     //motors
     val suckMotor = MotorController(TalonID(Talons.INTAKE_SUCK))
     val spitMotor = MotorController(TalonID(Talons.INTAKE_SPIT))
-    val intakePivotMotor = Servo(PWMServos.INTAKE_PIVOT)
+    val intakePivotMotor = MotorController(TalonID(Talons.INTAKE_PIVOT))
     val armMotor = MotorController(FalconID(Falcons.ARM))
     val elevatorMotor = MotorController(FalconID(Falcons.ELEVATOR))
 
@@ -361,7 +361,8 @@ object Armavator : Subsystem("Armavator") {
                 tubeTime = 0.0
             }
 
-            intakePivotMotor.set(-OI.operatorRightX / 2.0 + 0.5)
+            intakePivotMotor.setPercentOutput(-OI.operatorRightX)
+//            intakePivotMotor.set(-OI.operatorRightX / 2.0 + 0.5)
 
             spitMotor.setPercentOutput(OI.operatorRightTrigger - OI.operatorLeftTrigger)
             suckMotor.setPercentOutput(if (OI.operatorController.rightBumper) 1.0 else if (OI.operatorController.leftBumper) -1.0 else 0.0)

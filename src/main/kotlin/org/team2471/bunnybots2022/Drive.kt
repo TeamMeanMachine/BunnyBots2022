@@ -381,7 +381,7 @@ object Drive : Subsystem("Drive"), SwerveDrive {
                 turn = OI.driveRotation
             }
 
-            var speedFactor = linearMap(Pose.DRIVE_POSE.elevatorHeight.asInches, Armavator.ELEVATOR_MAX.asInches, 1.0, 0.4, Armavator.elevatorHeight.asInches).coerceIn(0.4, 1.0)
+            var speedFactor = linearMap(Pose.DRIVE_POSE.elevatorHeight.asInches, Armavator.ELEVATOR_MAX.asInches, 0.6, 0.2, Armavator.elevatorHeight.asInches).coerceIn(0.2, 0.6)
 
             printEncoderValues()
 
@@ -389,7 +389,7 @@ object Drive : Subsystem("Drive"), SwerveDrive {
 
             drive(
                 OI.driveTranslation * speedFactor,
-                turn,
+                turn * speedFactor,
                 SmartDashboard.getBoolean("Use Gyro", true) && !DriverStation.isAutonomous(),
                 false
             )
