@@ -1,5 +1,6 @@
 package org.team2471.bunnybots2022
 
+import com.ctre.phoenix.led.Animation
 import com.ctre.phoenix.sensors.CANCoder
 import edu.wpi.first.math.filter.LinearFilter
 import edu.wpi.first.math.geometry.Pose2d
@@ -71,7 +72,6 @@ object Drive : Subsystem("Drive"), SwerveDrive {
 
     var previousAverageSpeed = 0.0
 
-    var rampTestSpeed = 0.2
     var autoBalanceTestSpeed = 0.2
 
     /**
@@ -608,60 +608,28 @@ object Drive : Subsystem("Drive"), SwerveDrive {
         driveTimer.start()
         println("drive until not level")
         periodic {
-            drive(Vector2(0.0, rampTestSpeed), 0.0, fieldCentric = false)
+            drive(Vector2(0.0, 0.25), 0.0, fieldCentric = false)
             if (gyro.getNavX().pitch > 3.0) {
                 stop()
             }
         }
-        driveDistance(Vector2(0.0, rampTestSpeed), 62.0.inches)
-        driveDistance(Vector2(0.0, -0.18), 2.5.inches)
-
-
-//            if (stage==1 && gyro.getNavX().pitch > 14.0) {
-//                rampTestSpeed = 0.2
-//                stage = 2
-//            }
-//            if (stage==2 && gyro.getNavX().pitch < 14.0) {
-//                rampTestSpeed = -0.2
-//                driveTimer.reset()
-//                stage = 3
-//            }
-//            if (stage==3 && driveTimer.get() > 0.9) {
-//                rampTestSpeed = 0.0
-//                stage = 6
-//                driveTimer.reset()
-//            }
-//            if (stage==4 && gyro.getNavX().pitch > -14.0) {
-//                rampTestSpeed = 0.2
-//                driveTimer.reset()
-//                stage = 5
-//            }
-//            if (stage==5 && driveTimer.get() > 0.9) {
-//                rampTestSpeed = 0.0
-//                stage = 6
-//                driveTimer.reset()
-//            }
-//            if (stage==6 && driveTimer.get() > 0.9){
-//                if (gyro.getNavX().pitch > 14.0){
-//                    stage = 1
-//                } else if (gyro.getNavX().pitch < -14.0){
-//                    stage = 4
-//                } else {
-//                    this.stop()
-//                }
-//            }
-  //      }
-        drive(Vector2(0.0, 0.0), 0.0)
-
+        driveDistance(0.25, 0.4, 0.15, 62.0.inches)
+        driveDistance(-0.15, -0.18, -0.15, 2.5.inches)
+        delay(1.0.seconds)
+        autoBalanceTest()
+        xPose()
     }
 
-    suspend fun driveDistance(speed: Vector2, distance: Length) = use(Drive) {
-        println("Drive to the center of ramp")
+    suspend fun driveDistance(startPower: Double, cruisePower: Double, endPower: Double, distance: Length) = use(Drive) {
         var prevPosition = position
+        val powerCurve = MotionCurve()
+        powerCurve.storeValue(0.0, startPower)
+        powerCurve.storeValue(distance.asFeet/2.0, cruisePower)
+        powerCurve.storeValue(distance.asFeet, endPower)
         periodic {
-            drive(speed, 0.0, fieldCentric = false)
             val distanceTraveled = (position - prevPosition).length.feet
-            println("distance = $distanceTraveled")
+            drive(Vector2(0.0, powerCurve.getValue(distanceTraveled.asFeet)), 0.0, fieldCentric = false)
+         //   println("distance = $distanceTraveled")
             if (distanceTraveled > distance) {
                 stop()
             }
@@ -672,26 +640,9 @@ object Drive : Subsystem("Drive"), SwerveDrive {
         val driveTimer = Timer()
         driveTimer.start()
         periodic {
-            drive(Vector2(0.0, 0.2), 0.0)
-            if(gyro.getNavX().pitch > 10) {
-                if(driveTimer.get() > 3)
-                    this.stop()
-            }
-        }
-        driveTimer.reset()
-        periodic {
-            if(gyro.getNavX().pitch > 3) {
-                drive(Vector2(0.0, 0.18), 0.0)
-                if(driveTimer.get() > 0.5) {
-                    drive(Vector2(0.0, 0.0), 0.0)
-                    if(driveTimer.get() > 1.5) {
-                        driveTimer.reset()
-                    }
-                }
-            }
-            else if(gyro.getNavX().pitch < -3) {
-                drive(Vector2(0.0, -0.18), 0.0)
-                if(driveTimer.get() > 0.5) {
+            if (gyro.getNavX().pitch.absoluteValue > 3.0) {
+                drive(Vector2(0.0, gyro.getNavX().pitch/100.0), 0.0, fieldCentric = false)
+                if (driveTimer.get() > 0.5) {
                     drive(Vector2(0.0, 0.0), 0.0)
                     if(driveTimer.get() > 1.5) {
                         driveTimer.reset()
@@ -700,6 +651,7 @@ object Drive : Subsystem("Drive"), SwerveDrive {
             }
             else {
                 drive(Vector2(0.0, 0.0), 0.0)
+                stop()
             }
             println("Pitch = ${gyro.getNavX().pitch}, Time = ${driveTimer.get()}")
         }
