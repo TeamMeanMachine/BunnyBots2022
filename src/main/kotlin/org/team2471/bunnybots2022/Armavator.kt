@@ -106,8 +106,8 @@ object Armavator : Subsystem("Armavator") {
 
 
     fun resetOffset() {
-        armMotor.setRawOffset(ARM_ANGLE_MIN)
-        elevatorMotor.setRawOffset(ELEVATOR_START.asInches.degrees)
+        armMotor.setRawOffset(ARM_ANGLE_MIN.asDegrees)
+        elevatorMotor.setRawOffset(ELEVATOR_START.asInches)
     }
 //    val analogAngle: Angle
 //        get() = -(((armAngleEncoder.voltage - 0.2) / 4.6 * 360.0).degrees) + angleOffset
@@ -118,7 +118,7 @@ object Armavator : Subsystem("Armavator") {
             // this was from lil bois bench test of swerve
             feedbackCoefficient =
                 (18.0 / 66.0) * (18.0 / 72.0) * (1.0 / 4.0) * (1.0 / 4.0) * (360.0 / 2048.0) // degrees per tick
-            setRawOffsetConfig(ARM_ANGLE_MIN) //analogAngle
+            setRawOffsetConfig(ARM_ANGLE_MIN.asDegrees) //analogAngle
 //            setRawOffsetConfig(ARM_ANGLE_MAX) //analogAngle
             currentLimit(15, 20, 1)
             pid {
@@ -132,7 +132,7 @@ object Armavator : Subsystem("Armavator") {
             brakeMode()
             currentLimit(25, 30, 1)
             feedbackCoefficient = 12.0 / 28504 //57609.0  // inche per tick
-            setRawOffsetConfig(ELEVATOR_START.asInches.degrees) // todo: really inches - this needs changed in meanlib to take a Double
+            setRawOffsetConfig(ELEVATOR_START.asInches) // todo: really inches - this needs changed in meanlib to take a Double
 //            setRawOffsetConfig(ELEVATOR_MAX.asInches.degrees)
             pid {
                 p(0.00000003)

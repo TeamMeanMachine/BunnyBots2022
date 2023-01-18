@@ -81,8 +81,10 @@ object Robot : MeanlibRobot() {
         println("test mode begin. Hi.")
 //        scoreCharge()
 //        Drive.setAngleOffsets()
-        //Drive.steeringTests()
-        Drive.rampTest()
+     //   Drive.steeringTests()
+        //Drive.driveTests()
+       Drive.rampTest()
+      // Drive.autoBalanceTest()
     }
 
 
