@@ -615,44 +615,27 @@ object Drive : Subsystem("Drive"), SwerveDrive {
                 stop()
             }
         }
-        driveDistance(1.8.seconds, 80.0.inches)
+        driveDistance(Vector2(0.0, 0.2), 62.0.inches)
+        driveDistance(Vector2(0.0, -0.18), 2.5.inches)
+        //driveDistance(1.8.seconds, 80.0.inches)
        // driveDistance(0.5.seconds, -2.5.inches)
         delay(1.0.seconds)
         autoBalanceTest()
         xPose()
     }
 
-    suspend fun driveDistance(time: Time, distance: Length) = use(Drive) {
-        val path = Path2D()
-        path.addVector2(position)
-        if (heading.asDegrees.absoluteValue < 15.0) {
-            path.addPoint(position.x, position.y + distance.asFeet)
-        }
-        else {
-            path.addPoint(position.x, position.y - distance.asFeet)
-        }
-        path.easeCurve.storeValueSlopeAndMagnitude(0.0, 0.0, 0.4, 1.45)
-        path.addEasePoint(time.asSeconds, 1.0)
-        path.addHeadingPoint(0.0, heading.asDegrees)
-
-        driveAlongPath(path)
-/*
+    suspend fun driveDistance(speed: Vector2, distance: Length) = use(Drive) {
+        println("Drive to the center of ramp")
         var prevPosition = position
-        val powerCurve = MotionCurve()
-        powerCurve.storeValue(0.0, startPower)
-        powerCurve.storeValue(distance.asFeet/2.0, cruisePower)
-        powerCurve.storeValue(distance.asFeet, endPower)
         periodic {
+            drive(speed, 0.0, fieldCentric = false)
             val distanceTraveled = (position - prevPosition).length.feet
-            drive(Vector2(0.0, powerCurve.getValue(distanceTraveled.asFeet)), 0.0, fieldCentric = false)
-         //   println("distance = $distanceTraveled")
+            println("distance = $distanceTraveled")
             if (distanceTraveled > distance) {
                 stop()
             }
         }
         drive(Vector2(0.0, 0.0), 0.0)
-*/
-
     }
     suspend fun autoBalanceTest() = use(Drive) {
         val driveTimer = Timer()
