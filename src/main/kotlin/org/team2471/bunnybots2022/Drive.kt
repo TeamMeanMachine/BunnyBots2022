@@ -24,6 +24,8 @@ import org.team2471.frc.lib.math.Vector2
 import org.team2471.frc.lib.math.linearMap
 import org.team2471.frc.lib.motion.following.*
 import org.team2471.frc.lib.motion_profiling.MotionCurve
+import org.team2471.frc.lib.motion_profiling.Path2D
+import org.team2471.frc.lib.motion_profiling.Path2DCurve
 import org.team2471.frc.lib.motion_profiling.following.SwerveParameters
 import org.team2471.frc.lib.units.*
 import org.team2471.frc2022.AprilTag
@@ -613,14 +615,28 @@ object Drive : Subsystem("Drive"), SwerveDrive {
                 stop()
             }
         }
-        driveDistance(0.25, 0.4, 0.15, 62.0.inches)
-        driveDistance(-0.15, -0.18, -0.15, 2.5.inches)
+        driveDistance(1.8.seconds, 80.0.inches)
+       // driveDistance(0.5.seconds, -2.5.inches)
         delay(1.0.seconds)
         autoBalanceTest()
         xPose()
     }
 
-    suspend fun driveDistance(startPower: Double, cruisePower: Double, endPower: Double, distance: Length) = use(Drive) {
+    suspend fun driveDistance(time: Time, distance: Length) = use(Drive) {
+        val path = Path2D()
+        path.addVector2(position)
+        if (heading.asDegrees.absoluteValue < 15.0) {
+            path.addPoint(position.x, position.y + distance.asFeet)
+        }
+        else {
+            path.addPoint(position.x, position.y - distance.asFeet)
+        }
+        path.easeCurve.storeValueSlopeAndMagnitude(0.0, 0.0, 0.4, 1.45)
+        path.addEasePoint(time.asSeconds, 1.0)
+        path.addHeadingPoint(0.0, heading.asDegrees)
+
+        driveAlongPath(path)
+/*
         var prevPosition = position
         val powerCurve = MotionCurve()
         powerCurve.storeValue(0.0, startPower)
@@ -635,6 +651,8 @@ object Drive : Subsystem("Drive"), SwerveDrive {
             }
         }
         drive(Vector2(0.0, 0.0), 0.0)
+*/
+
     }
     suspend fun autoBalanceTest() = use(Drive) {
         val driveTimer = Timer()
@@ -653,7 +671,7 @@ object Drive : Subsystem("Drive"), SwerveDrive {
                 drive(Vector2(0.0, 0.0), 0.0)
                 stop()
             }
-            println("Pitch = ${gyro.getNavX().pitch}, Time = ${driveTimer.get()}")
+          //  println("Pitch = ${gyro.getNavX().pitch}, Time = ${driveTimer.get()}")
         }
     }
 }
