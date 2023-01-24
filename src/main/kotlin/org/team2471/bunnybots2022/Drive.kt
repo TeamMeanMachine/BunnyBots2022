@@ -1,6 +1,5 @@
 package org.team2471.bunnybots2022
 
-import com.ctre.phoenix.led.Animation
 import com.ctre.phoenix.sensors.CANCoder
 import edu.wpi.first.math.filter.LinearFilter
 import edu.wpi.first.math.geometry.Pose2d
@@ -15,6 +14,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.team2471.frc.lib.actuators.FalconID
 import org.team2471.frc.lib.actuators.MotorController
+import org.team2471.frc.lib.actuators.TalonID
 import org.team2471.frc.lib.control.PDConstantFController
 import org.team2471.frc.lib.control.PDController
 import org.team2471.frc.lib.coroutines.*
@@ -24,13 +24,11 @@ import org.team2471.frc.lib.math.Vector2
 import org.team2471.frc.lib.math.linearMap
 import org.team2471.frc.lib.motion.following.*
 import org.team2471.frc.lib.motion_profiling.MotionCurve
-import org.team2471.frc.lib.motion_profiling.Path2D
-import org.team2471.frc.lib.motion_profiling.Path2DCurve
 import org.team2471.frc.lib.motion_profiling.following.SwerveParameters
 import org.team2471.frc.lib.units.*
-import org.team2471.frc2022.AprilTag
 import kotlin.math.absoluteValue
 import kotlin.math.cos
+import kotlin.math.sign
 import kotlin.math.sin
 
 @OptIn(DelicateCoroutinesApi::class)
@@ -68,6 +66,7 @@ object Drive : Subsystem("Drive"), SwerveDrive {
     val fieldObject = Field2d()
     val radarObject = Field2d()
 
+    val johnsonMotor = MotorController(TalonID(10))
 
     val fieldDimensions = Vector2(26.9375.feet.asMeters,54.0.feet.asMeters)
     val fieldCenterOffset = fieldDimensions/2.0
@@ -266,12 +265,13 @@ object Drive : Subsystem("Drive"), SwerveDrive {
             println("in init just before periodic")
             periodic {
                 var (x, y) = position
-                if (x.absoluteValue > reducedField.x || y.absoluteValue > reducedField.y ){
-                    println("Coercing x inside field dimensions")
-                    x = x.coerceIn(-reducedField.x, reducedField.x)
-                    y = y.coerceIn(-reducedField.y, reducedField.y)
-                    position = Vector2(x, y)
-                }
+//may need to be commented out
+                //if (x.absoluteValue > reducedField.x || y.absoluteValue > reducedField.y ){
+                //     println("Coercing x inside field dimensions")
+//                x = x.coerceIn(-reducedField.x, reducedField.x)
+//                    y = y.coerceIn(-reducedField.y, reducedField.y)
+//                    position = Vector2(x, y)
+//                }
                 xEntry.setDouble(x)
                 yEntry.setDouble(y)
                 headingEntry.setDouble(heading.asDegrees)
@@ -297,7 +297,10 @@ object Drive : Subsystem("Drive"), SwerveDrive {
                 val lastX = lastRobotFieldXY[0]
                 val lastY = lastRobotFieldXY[1]
                 if (lastX != 0.0 && lastY != 0.0 && robotHalfWidth < lastX && lastX < fieldDimensions.x - robotHalfWidth && robotHalfWidth < lastY && lastY < fieldDimensions.y - robotHalfWidth && (lastPosition.x != lastX || lastPosition.y != lastY)) {
-                    position = Vector2((lastX - fieldCenterOffset.x).meters.asFeet, (lastY - fieldCenterOffset.y).meters.asFeet)
+                    position = Vector2(
+                        (lastX - fieldCenterOffset.x).meters.asFeet,
+                        (lastY - fieldCenterOffset.y).meters.asFeet
+                    )
                     lastPosition = fieldObject.robotPose
                     println("from fieldobject")
                 } else {
@@ -328,6 +331,17 @@ object Drive : Subsystem("Drive"), SwerveDrive {
 //                println()
 //                aimPDController.p = aimPEntry.getDouble(0.015)
 //                aimPDController.d = aimDEntry.getDouble(0.005)
+
+//                if (OI.driverController.a) {
+//                    println("A button pressed!")
+//                    johnsonMotor.setPercentOutput(0.5)
+//                }
+//                else if (OI.driverController.y){
+//                    println("Reverse Da Motor!!")
+//                    johnsonMotor.setPercentOutput(-0.5)
+//                } else {
+//                    johnsonMotor.setPercentOutput(0.0)
+//                }
             }
         }
     }
@@ -388,8 +402,6 @@ object Drive : Subsystem("Drive"), SwerveDrive {
                 turn = OI.driveRotation
             }
 
-            printEncoderValues()
-
             headingSetpoint = OI.driverController.povDirection
             drive(
                 OI.driveTranslation,
@@ -402,25 +414,6 @@ object Drive : Subsystem("Drive"), SwerveDrive {
 
 
 
-    fun printEncoderValues() {
-//        var totalCurrent=0.0
-//        var totalSpeed=0.0
-//        for (module in 0..modules.size-1) {
-//            totalCurrent += (modules[module] as Module).driveCurrent
-//            totalSpeed += (modules[module] as Module).speed.absoluteValue
-//        }
-//        totalCurrent /= 4.0
-//        totalSpeed /= 4.0
-//        var odometryAcceleration = (totalSpeed - previousAverageSpeed).absoluteValue*50.0
-//        val accel = Vector2(navX.getNavX().worldLinearAccelX.toDouble(), navX.getNavX().worldLinearAccelY.toDouble())
-//  //      println("Accel=${round((accel.length)*32.1,2)},${round(odometryAcceleration,2)}  Current= ${round(totalCurrent,2)}   Speed= ${round(totalSpeed,2) } Current to Speed= ${round(totalCurrent/totalSpeed,2)}  ")
-//        navxAccelEntry.setDouble((accel.length)*32.1)
-//        wheelAccelEntry.setDouble(odometryAcceleration)
-//        averageCurrentEntry.setDouble(totalCurrent)
-//        averageWheelSpeedEntry.setDouble(totalSpeed)
-//
-//        previousAverageSpeed = totalSpeed
-    }
 
     fun initializeSteeringMotors() {
         for (moduleCount in 0..modules.size-1) {
@@ -615,12 +608,10 @@ object Drive : Subsystem("Drive"), SwerveDrive {
                 stop()
             }
         }
-        driveDistance(Vector2(0.0, 0.2), 62.0.inches)
+        driveDistance(Vector2(0.0, 0.2), 66.0.inches)
         driveDistance(Vector2(0.0, -0.18), 2.5.inches)
-        //driveDistance(1.8.seconds, 80.0.inches)
-       // driveDistance(0.5.seconds, -2.5.inches)
         delay(1.0.seconds)
-        autoBalanceTest()
+        autoBalance()
         xPose()
     }
 
@@ -637,12 +628,15 @@ object Drive : Subsystem("Drive"), SwerveDrive {
         }
         drive(Vector2(0.0, 0.0), 0.0)
     }
-    suspend fun autoBalanceTest() = use(Drive) {
+    suspend fun autoBalance() = use(Drive) {
         val driveTimer = Timer()
         driveTimer.start()
         periodic {
-            if (gyro.getNavX().pitch.absoluteValue > 3.0) {
-                drive(Vector2(0.0, gyro.getNavX().pitch/100.0), 0.0, fieldCentric = false)
+            if (gyro.getNavX().pitch.absoluteValue > 2.5) {
+                // constant part for a feed forward, so there's always enough power to move.
+                // plus a proportional part so that the power is higher when steep and less as it flattens.
+                drive(Vector2(0.0, gyro.getNavX().pitch.sign * 0.10 + gyro.getNavX().pitch / 200.0), 0.0, fieldCentric = false)
+                println("pitch = ${gyro.getNavX().pitch}")
                 if (driveTimer.get() > 0.5) {
                     drive(Vector2(0.0, 0.0), 0.0)
                     if(driveTimer.get() > 1.5) {
